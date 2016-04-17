@@ -1,0 +1,6 @@
+repositories:
+- repository: java
+  storage: 
+    type: local
+    path: <yourpath>
+    size: 20G
