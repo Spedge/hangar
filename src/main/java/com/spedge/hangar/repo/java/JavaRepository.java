@@ -3,10 +3,14 @@ package com.spedge.hangar.repo.java;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.StreamingOutput;
 
-import org.hibernate.validator.constraints.NotEmpty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,11 +20,10 @@ import com.spedge.hangar.storage.IStorage;
 @Path("/java")
 public class JavaRepository implements IRepository
 {
+	final static Logger logger = LoggerFactory.getLogger(JavaRepository.class);
 	private HealthCheck check;
-	private static final String NAME = "java";
 	
-	@Valid
-	@NotEmpty
+	@NotNull
 	private IStorage storage;
 
 	public JavaRepository()
@@ -43,5 +46,13 @@ public class JavaRepository implements IRepository
 		checks.put("java_repo", check);
 		checks.put("java_storage", storage.getHealthcheck());
 		return checks;
+	}
+	
+	@GET
+	@Path("{path : .+}/{artifact : [^/]+}")
+	public StreamingOutput getArtifact(@PathParam("path") String path, @PathParam("artifact") String artifact)
+	{
+		logger.debug("Path : " + path + ", Artifact : " + artifact);
+		return storage.getArtifactStream(path, artifact);
 	}
 }
