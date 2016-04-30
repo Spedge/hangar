@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.repo.IRepository;
+import com.spedge.hangar.requests.TestRequest;
 
 /**
  * The main entry point for the Hangar application.
@@ -34,7 +35,12 @@ public class Hangar extends Application<HangarConfiguration> {
 	@Override
 	public void run(HangarConfiguration configuration, Environment environment)	throws Exception 
 	{	
+		// When the application starts, we create the repositories we want to manage
+		// from the configuration file that was passed in at startup.
 		List<IRepository> repos = configuration.getRepositories();
+		
+		// Once we've got the list, we want to register all of the healthchecks that come
+		// with these configurations - as well as registering the repository endpoints themselves.
 		for(IRepository repo : repos)
 		{
 			for(String key : repo.getHealthChecks().keySet())
@@ -43,6 +49,11 @@ public class Hangar extends Application<HangarConfiguration> {
 			}
 			environment.jersey().register(repo);
 		}
+		
+		// This is a path that I can hit to see the details of a request,
+		// something I've found particularly hard to capture with some of the 
+		// crazy multi-requests that go on in dependency management.
+		environment.jersey().register(new TestRequest()); 
 	}
 
 }
