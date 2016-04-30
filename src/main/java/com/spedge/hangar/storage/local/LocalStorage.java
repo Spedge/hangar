@@ -10,10 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -21,6 +19,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.io.ByteStreams;
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.repo.java.JavaIndexKey;
 import com.spedge.hangar.storage.Storage;
 
 public class LocalStorage extends Storage
@@ -58,16 +58,25 @@ public class LocalStorage extends Storage
 	public void setSize(String size) {
 		this.size = size;
 	}
+	
+	public IndexArtifact generateArtifactPath(JavaIndexKey key) 
+	{
+		IndexArtifact ia = new IndexArtifact();
+		String version = key.getVersion().isEmpty()? "/" + key.getVersion() : "";
+		ia.setLocation("/" + key.getGroup().replace(':', '/') + "/" + key.getArtifact() + version);
+		return ia;
+	}
 
-	public StreamingOutput getArtifactStream(final String artifact_path, final String artifact) {
+	public StreamingOutput getArtifactStream(final IndexArtifact artifact, final String filename) {
 		
 		return new StreamingOutput() {
             
             public void write(OutputStream os) throws IOException, WebApplicationException 
             {
-            	if(Files.isReadable(Paths.get(path + "/" + artifact_path + "/" + artifact)))
+            	String artifact_path = path + artifact.getLocation() + "/" + filename;
+            	if(Files.isReadable(Paths.get(artifact_path)))
             	{
-            		ByteStreams.copy(new FileInputStream(path + "/" + artifact_path + "/" + artifact), os);
+            		ByteStreams.copy(new FileInputStream(artifact_path), os);
             	}
             	else
             	{
@@ -76,30 +85,29 @@ public class LocalStorage extends Storage
             }
         };
 	}
+	
+	public void uploadReleaseArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream) throws LocalStorageException {
+		uploadArtifactStream(artifact, filename, uploadedInputStream);
+	}
 
-	private Response uploadArtifactStream(String artifact_path, String artifact, InputStream uploadedInputStream, StandardCopyOption... options) {
+	public void uploadSnapshotArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream) throws LocalStorageException {
+		uploadArtifactStream(artifact, filename, uploadedInputStream, StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	private void uploadArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream, StandardCopyOption... options) throws LocalStorageException {
 		
-		Path outputPath = FileSystems.getDefault().getPath(path + "/" + artifact_path);
-		Path outputPathArtifact = FileSystems.getDefault().getPath(outputPath + "/" + artifact);
+		Path outputPath = FileSystems.getDefault().getPath(path + artifact.getLocation());
+		Path outputPathArtifact = FileSystems.getDefault().getPath(path + artifact.getLocation() + "/" + filename);
 		
 		try 
 		{
 			Files.createDirectories(outputPath);
 			Files.copy(uploadedInputStream, outputPathArtifact, options);
-			return Response.ok().build();
 		} 
 		catch (IOException e) 
 		{
 			logger.error(e.getLocalizedMessage());
-			throw new InternalServerErrorException();
+			throw new LocalStorageException();
 		}
-	}
-
-	public Response uploadReleaseArtifactStream(String artifact_path, String artifact_name, InputStream uploadedInputStream) {
-		return uploadArtifactStream(artifact_path, artifact_name, uploadedInputStream);
-	}
-
-	public Response uploadSnapshotArtifactStream(String artifact_path, String artifact_name, InputStream uploadedInputStream) {
-		return uploadArtifactStream(artifact_path, artifact_name, uploadedInputStream, StandardCopyOption.REPLACE_EXISTING);
-	}
+	}	
 }
