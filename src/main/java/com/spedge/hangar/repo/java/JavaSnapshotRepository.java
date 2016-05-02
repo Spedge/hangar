@@ -27,7 +27,7 @@ public class JavaSnapshotRepository extends JavaRepository
 			                           @PathParam("filename") String filename)
 	{
 		IndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
-	    logger.debug("[Downloading Snapshot] " + key);
+	    logger.info("[Downloading Snapshot] " + key);
 	    
 		if(getIndex().isArtifact(key))
 		{
@@ -49,8 +49,8 @@ public class JavaSnapshotRepository extends JavaRepository
 			                       InputStream uploadedInputStream)
 	{
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
-		key = (getIndex().isArtifact(key))? new JavaIndexKey(group.replace('/', '.'), artifact) : key;
-		logger.debug("[Uploading Snapshot] " + key.toString());
+		key = (getIndex().isArtifact(key))? new JavaIndexKey(group.replace('/', '.'), artifact, version) : key;
+		logger.info("[Uploading Snapshot] " + key.toString());
 		
 		IndexArtifact ia = getStorage().generateArtifactPath(key);
 		getIndex().addArtifact(key, ia);
@@ -67,18 +67,19 @@ public class JavaSnapshotRepository extends JavaRepository
 	}
 	
 	@GET
-	@Path("/{dummy2 : (snapshots)?}{dummy3 : (/)?}{group : .+}{dummy4 : (/)?}{artifact : .+}{dummy5 : (/)?}maven-metadata.xml{type : (\\.)?(\\w)*}")
+	@Path("/{dummy2 : (snapshots)?}{dummy3 : (/)+}{group : .+}{dummy4 : (/)+}{artifact : .+}{dummy5 : (/)?}{version : (?i)[\\d\\.]*(-SNAPSHOT)?}/maven-metadata.xml{type : (\\.)?(\\w)*}")
 	public StreamingOutput getMetadata(@PathParam("group") String group, 
 			 						   @PathParam("artifact") String artifact,
-						               @PathParam("version") String version)
+						               @PathParam("version") String version,
+									   @PathParam("type") String type)
 	{
 		IndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
-		key = (getIndex().isArtifact(key))? new JavaIndexKey(group.replace('/', '.'), artifact) : key;
-	    logger.debug("[Downloading Metadata] " + key);
+		key = (getIndex().isArtifact(key))? new JavaIndexKey(group.replace('/', '.'), artifact, version) : key;
+	    logger.info("[Downloading Metadata] " + key);
 	    
 		if(getIndex().isArtifact(key))
 		{
-			return getStorage().getArtifactStream(getIndex().getArtifact(key), "maven-metadata.xml");
+			return getStorage().getArtifactStream(getIndex().getArtifact(key), "maven-metadata.xml" + type);
 		}
 		else
 		{
@@ -88,21 +89,22 @@ public class JavaSnapshotRepository extends JavaRepository
 	
 	@PUT
 	@Consumes(MediaType.WILDCARD)
-	@Path("/{dummy2 : (snapshots)?}{dummy3 : (/)?}{group : .+}{dummy4 : (/)?}{artifact : .+}{dummy5 : (/)?}maven-metadata.xml{type : (\\.)?(\\w)*}")
+	@Path("/{dummy2 : (snapshots)?}{dummy3 : (/)+}{group : .+}{dummy4 : (/)+}{artifact : .+}{dummy5 : (/)?}{version : (?i)[\\d\\.]*(-SNAPSHOT)?}/maven-metadata.xml{type : (\\.)?(\\w)*}")
 	public Response uploadMetadata(@PathParam("group") String group, 
 								   @PathParam("artifact") String artifact,
+								   @PathParam("type") String type,
 			                       InputStream uploadedInputStream)
 	{
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact);
 		key = (getIndex().isArtifact(key))? new JavaIndexKey(group.replace('/', '.'), artifact) : key;
-		logger.debug("[Uploading Metadata] " + key.toString());
+		logger.info("[Uploading Metadata] " + key.toString());
 		
 		IndexArtifact ia = getStorage().generateArtifactPath(key);
 		getIndex().addArtifact(key, ia);
 		
 		try 
 		{
-			getStorage().uploadSnapshotArtifactStream(ia, "maven-metadata", uploadedInputStream);
+			getStorage().uploadSnapshotArtifactStream(ia, "maven-metadata.xml" + type, uploadedInputStream);
 			return Response.ok().build();
 		} 
 		catch (StorageException e) 
@@ -110,6 +112,4 @@ public class JavaSnapshotRepository extends JavaRepository
 			throw new InternalServerErrorException();
 		}
 	}
-	
-
 }

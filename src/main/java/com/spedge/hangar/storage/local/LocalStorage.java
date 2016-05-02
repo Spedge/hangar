@@ -62,8 +62,8 @@ public class LocalStorage extends Storage
 	public IndexArtifact generateArtifactPath(JavaIndexKey key) 
 	{
 		IndexArtifact ia = new IndexArtifact();
-		String version = key.getVersion().isEmpty()? "/" + key.getVersion() : "";
-		ia.setLocation("/" + key.getGroup().replace(':', '/') + "/" + key.getArtifact() + version);
+		String version = key.getVersion().isEmpty()? "" : "/" + key.getVersion();
+		ia.setLocation("/" + key.getGroup().replace('.', '/') + "/" + key.getArtifact() + version);
 		return ia;
 	}
 
