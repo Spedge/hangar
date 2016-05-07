@@ -9,17 +9,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.io.ByteStreams;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.java.JavaIndexKey;
 import com.spedge.hangar.storage.Storage;
 
@@ -59,14 +64,45 @@ public class LocalStorage extends Storage
 		this.size = size;
 	}
 	
-	public IndexArtifact generateArtifactPath(JavaIndexKey key) 
+	// From the JavaIndexKey (containing GAV params)
+	// generate the path that it should go into on local storage.
+	@Override
+	protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key)
 	{
 		IndexArtifact ia = new IndexArtifact();
 		String version = key.getVersion().isEmpty()? "" : "/" + key.getVersion();
 		ia.setLocation("/" + key.getGroup().replace('.', '/') + "/" + key.getArtifact() + version);
 		return ia;
 	}
+	
+	@Override
+	public List<IndexKey> getArtifactKeys() throws LocalStorageException
+	{
+		try 
+		{
+			
+			List<IndexKey> paths = Files.walk(Paths.get(path))
+								        .filter(Files::isRegularFile)
+								        .map(e -> e.toString().replace(path, ""))
+								        .map(e -> e.subSequence(0, e.lastIndexOf("\\")).toString())
+								        .map(e -> e.substring(1, StringUtils.lastOrdinalIndexOf(e, "\\", 2)).replace("\\", ".") 
+								        		                   + ":" + e.substring(StringUtils.lastOrdinalIndexOf(e, "\\", 2), e.lastIndexOf("\\")).replace("\\", "")
+								        		                   + ":" + e.substring(e.lastIndexOf("\\"), e.length()).replace("\\", ""))
+								        .distinct()
+								        .map(e -> new IndexKey(type, e))
+								        .collect(Collectors.toList());
+			
+			logger.info(paths.size() + " Artifacts Indexed under " + path);
+			return paths;
+		} 
+		catch (IOException e) 
+		{
+			logger.info(e.getMessage());
+			throw new LocalStorageException();
+		}
+	}
 
+	@Override
 	public StreamingOutput getArtifactStream(final IndexArtifact artifact, final String filename) {
 		
 		return new StreamingOutput() {

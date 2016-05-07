@@ -43,6 +43,8 @@ public class Hangar extends Application<HangarConfiguration> {
 		// with these configurations - as well as registering the repository endpoints themselves.
 		for(IRepository repo : repos)
 		{
+			repo.loadRepository();
+			
 			for(String key : repo.getHealthChecks().keySet())
 			{
 				environment.healthChecks().register(key,  repo.getHealthChecks().get(key));

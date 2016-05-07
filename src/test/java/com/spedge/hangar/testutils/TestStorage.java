@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
@@ -11,6 +12,8 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexKey;
+import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
@@ -57,4 +60,15 @@ public class TestStorage implements IStorage
 		public String getFilename() { return filename; }
 		public void write(OutputStream arg0) throws IOException, WebApplicationException {}
 	}
+
+	@Override
+	public void setType(RepositoryType type) {}
+
+	@Override
+	public List<IndexKey> getArtifactKeys() throws StorageException { return null; }
+
+	@Override
+	public IndexArtifact generateArtifactPath(IndexKey key) throws StorageException { return null; }
+
+
 }

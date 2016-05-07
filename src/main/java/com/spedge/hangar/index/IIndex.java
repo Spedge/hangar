@@ -1,5 +1,8 @@
 package com.spedge.hangar.index;
 
+import com.spedge.hangar.storage.IStorage;
+import com.spedge.hangar.storage.StorageException;
+
 public interface IIndex {
 
 	// This allows us to confirm if we have an artifact of that signature
@@ -15,4 +18,8 @@ public interface IIndex {
 	// Once we're happy with the artifact we want to get,
     // we need details of where to stream it from.
 	IndexArtifact getArtifact(IndexKey key);
+
+	// When the index is empty on startup, we load it 
+	// from the appropriate storage.
+	void load(IStorage storage) throws StorageException;
 }

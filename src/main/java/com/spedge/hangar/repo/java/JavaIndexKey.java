@@ -5,25 +5,30 @@ import com.spedge.hangar.repo.RepositoryType;
 
 public class JavaIndexKey extends IndexKey {
 
-	private static final RepositoryType type = RepositoryType.JAVA;
-	private String group;
-	private String artifact;
-	private String version;
-	
-	public JavaIndexKey(String group, String artifact)
+	private String group = "";
+	private String artifact = "";
+	private String version = "";
+		
+	public JavaIndexKey(String key)
 	{
-		this.group = group;
-		this.artifact = artifact;
-		this.version = "";
+		super(RepositoryType.JAVA, key);
+		
+		String[] split = key.split(":");
+		
+		this.group = (split.length > 0)? split[0] : "";
+		this.artifact = (split.length > 1)? split[1] : "";
+		this.version = (split.length > 2)? split[2] : "";
 	}
 	
 	public JavaIndexKey(String group, String artifact, String version)
 	{
+		super(RepositoryType.JAVA, group + ":" + artifact + ":" + version);
+
 		this.group = group;
 		this.artifact = artifact;
 		this.version = version;
 	}
-	
+		
 	public String getGroup()
 	{
 		return group;
@@ -41,6 +46,6 @@ public class JavaIndexKey extends IndexKey {
 	
 	public String toString()
 	{
-		return type.toString() + ":" + group + ":" + artifact + ":" + version;
+		return super.toString();
 	}
 }

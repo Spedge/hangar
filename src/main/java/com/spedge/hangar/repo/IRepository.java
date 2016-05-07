@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.repo.java.JavaDownloadRepository;
 import com.spedge.hangar.repo.java.JavaReleaseRepository;
 import com.spedge.hangar.repo.java.JavaSnapshotRepository;
+import com.spedge.hangar.storage.StorageException;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
@@ -18,5 +19,5 @@ import com.spedge.hangar.repo.java.JavaSnapshotRepository;
 public interface IRepository {
 
 	Map<String, HealthCheck> getHealthChecks();
-	
+	void loadRepository() throws StorageException;
 }

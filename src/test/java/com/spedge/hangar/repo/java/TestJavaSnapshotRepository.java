@@ -6,6 +6,7 @@ import java.io.InputStream;
 
 import org.junit.Test;
 
+import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.InMemoryIndex;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.storage.StorageException;
@@ -27,14 +28,14 @@ public class TestJavaSnapshotRepository {
 		// Add mock storage and index to repo
 		JavaSnapshotRepository jsr = new JavaSnapshotRepository();
 		
-		InMemoryIndex index = new InMemoryIndex();
-		jsr.setIndex(index);
-
 		TestStorage storage = new TestStorage();
 		jsr.setStorage(storage);
 		
+		IIndex index = InMemoryIndex.getInstance();
+		jsr.setIndex(index);
+	
 		// Add our mock artifact
-		JavaIndexKey key = new JavaIndexKey(group, artifact, version);
+		JavaIndexKey key = new JavaIndexKey(group + ":" + artifact + ":" + version);
 		IndexArtifact ia = storage.generateArtifactPath(key);
 		index.addArtifact(key, ia);
 		
@@ -42,7 +43,7 @@ public class TestJavaSnapshotRepository {
 		storage.uploadSnapshotArtifactStream(ia, filename, uploadedInputStream);
 		
 		// See what happens!
-		FakeStreamingOutput fso = (FakeStreamingOutput) jsr.getArtifact(webgroup, artifact, version, filename);
+		FakeStreamingOutput fso = (FakeStreamingOutput) jsr.getSnapshotArtifact(webgroup, artifact, version, filename);
 		assertSame(fso.getFilename(), filename);
 	}
 }
