@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,21 +104,22 @@ public class LocalStorage extends Storage
 	@Override
 	public StreamingOutput getArtifactStream(final IndexArtifact artifact, final String filename) {
 		
-		return new StreamingOutput() {
-            
-            public void write(OutputStream os) throws IOException, WebApplicationException 
-            {
-            	String artifact_path = path + artifact.getLocation() + "/" + filename;
-            	if(Files.isReadable(Paths.get(artifact_path)))
-            	{
+		final String artifact_path = path + artifact.getLocation() + "/" + filename;
+		
+		if(Files.isReadable(Paths.get(artifact_path)))
+    	{
+			return new StreamingOutput() {
+	            
+	            public void write(OutputStream os) throws IOException, WebApplicationException 
+	            {
             		ByteStreams.copy(new FileInputStream(artifact_path), os);
-            	}
-            	else
-            	{
-            		throw new NotFoundException();
-            	}
-            }
-        };
+	            }
+	        };
+    	}
+		else
+		{
+			throw new NotFoundException();
+		}
 	}
 	
 	public void uploadReleaseArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream) throws LocalStorageException {
@@ -139,6 +139,7 @@ public class LocalStorage extends Storage
 		{
 			Files.createDirectories(outputPath);
 			Files.copy(uploadedInputStream, outputPathArtifact, options);
+			uploadedInputStream.close();
 		} 
 		catch (IOException e) 
 		{

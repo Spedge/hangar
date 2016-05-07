@@ -81,7 +81,7 @@ public abstract class JavaRepository implements IRepository
 		return checks;
 	}
 	
-	protected StreamingOutput getArtifact(JavaIndexKey key, String filename)
+	protected StreamingOutput getArtifact(JavaIndexKey key, String filename) 
 	{
 		if(getIndex().isArtifact(key))
 		{

@@ -14,7 +14,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.storage.StorageException;
 
 public class JavaSnapshotRepository extends JavaRepository
@@ -27,7 +26,7 @@ public class JavaSnapshotRepository extends JavaRepository
 			                                   @PathParam("filename") String filename)
 	{
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.') + ":" + artifact + ":" + version);
-	    logger.info("[Downloading Snapshot] " + key);
+	    logger.debug("[Downloading Snapshot] " + key);
 	    
 		return getArtifact(key, filename);
 	}
@@ -42,8 +41,7 @@ public class JavaSnapshotRepository extends JavaRepository
 			                       InputStream uploadedInputStream)
 	{
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
-//		key = (getIndex().isArtifact(key))? new JavaIndexKey(group.replace('/', '.'), artifact, version) : key;
-		logger.info("[Uploading Snapshot] " + key.toString());
+		logger.debug("[Uploading Snapshot] " + key.toString());
 		
 		try 
 		{
@@ -67,7 +65,7 @@ public class JavaSnapshotRepository extends JavaRepository
 									   @PathParam("type") String type)
 	{
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
-	    logger.info("[Downloading Metadata] " + key.toString());
+	    logger.debug("[Downloading Metadata] " + key.toString());
 	    
 		if(getIndex().isArtifact(key))
 		{
@@ -88,8 +86,7 @@ public class JavaSnapshotRepository extends JavaRepository
 			                       InputStream uploadedInputStream)
 	{
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.') + ":" + artifact);
-//		key = (getIndex().isArtifact(key))? new JavaIndexKey(group.replace('/', '.'), artifact) : key;
-		logger.info("[Uploading Metadata] " + key.toString());
+		logger.debug("[Uploading Metadata] " + key.toString());
 		
 		try 
 		{

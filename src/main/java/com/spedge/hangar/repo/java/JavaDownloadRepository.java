@@ -1,12 +1,27 @@
 package com.spedge.hangar.repo.java;
 
+import java.io.InputStream;
+
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+
+import org.eclipse.jetty.http.HttpStatus;
+
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.storage.StorageException;
 
 public class JavaDownloadRepository extends JavaRepository {
 
+	private String[] proxy;
 	
 	@GET
 	@Path("/{group : .+}/{artifact : .+}/{version : .+}/{filename : [^/]+}")
@@ -18,6 +33,47 @@ public class JavaDownloadRepository extends JavaRepository {
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
 	    logger.info("[Downloading Artifact] " + key);
 	    
-		return getArtifact(key, filename);
+	    try
+	    {
+	      	return getArtifact(key, filename);
+	    }
+	    catch(NotFoundException nfe)
+	    {
+	    	try
+	    	{    			
+		    	for(String source : proxy)
+		    	{
+			    	// So the artifact doesn't exist. We try and download it and save it to disk.
+			    	Client client = ClientBuilder.newClient();
+			    	WebTarget target = client.target(source).path(group + "/" + artifact + "/" + version + "/" + filename);
+			    	
+			    	Invocation.Builder builder = target.request(MediaType.WILDCARD);
+			    	Response resp = builder.get();
+	
+			    	if(resp.getStatus() == HttpStatus.OK_200)
+			    	{
+			    		logger.debug("[Proxy] Downloading from " + source);
+			    		IndexArtifact ia = getStorage().generateArtifactPath(key);
+						getIndex().addArtifact(key, ia);
+						getStorage().uploadSnapshotArtifactStream(ia, filename, resp.readEntity(InputStream.class));		
+						return getArtifact(key, filename);
+			    	}
+		    	}
+					
+		    	throw new NotFoundException();	    		
+	    	} 
+	    	catch (StorageException e) 
+	    	{
+				throw new InternalError();
+			}
+	    }
+	}
+
+	public String[] getProxy() {
+		return proxy;
+	}
+
+	public void setProxy(String[] proxy) {
+		this.proxy = proxy;
 	}
 }
