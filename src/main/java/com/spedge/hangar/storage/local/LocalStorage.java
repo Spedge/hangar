@@ -49,7 +49,8 @@ public class LocalStorage extends Storage
 	}
 
 	@JsonProperty
-	public void setPath(String path) {
+	public void setPath(String path) throws IOException {
+		Files.createDirectories(Paths.get(path));
 		this.path = path;
 	}
 
