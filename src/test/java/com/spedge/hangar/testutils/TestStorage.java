@@ -3,6 +3,7 @@ package com.spedge.hangar.testutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,9 @@ import com.codahale.metrics.health.HealthCheck;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.JavaIndexKey;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
+import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 
 public class TestStorage implements IStorage 
@@ -62,13 +64,8 @@ public class TestStorage implements IStorage
 	}
 
 	@Override
-	public void setType(RepositoryType type) {}
+	public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath) throws StorageException { return new ArrayList<IndexKey>(); }
 
 	@Override
-	public List<IndexKey> getArtifactKeys() throws StorageException { return null; }
-
-	@Override
-	public IndexArtifact generateArtifactPath(IndexKey key) throws StorageException { return null; }
-
-
+	public IndexArtifact generateArtifactPath(RepositoryType type, String uploadPath, IndexKey key) throws StorageException { return null; }
 }

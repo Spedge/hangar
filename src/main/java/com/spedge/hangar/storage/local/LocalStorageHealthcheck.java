@@ -13,12 +13,8 @@ public class LocalStorageHealthcheck extends HealthCheck
 	@NotEmpty
 	private String path;
 	
-	@NotEmpty
-	private String size;
-	
-	public LocalStorageHealthcheck(String path, String size) {
+	public LocalStorageHealthcheck(String path) {
 		this.path = path;
-		this.size = size;
 	}
 
 	@Override

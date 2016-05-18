@@ -1,14 +1,14 @@
 package com.spedge.hangar;
 
-import io.dropwizard.Application;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-
 import java.util.List;
 
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.repo.IRepository;
 import com.spedge.hangar.requests.TestRequest;
+
+import io.dropwizard.Application;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 
 /**
  * The main entry point for the Hangar application.
@@ -34,7 +34,7 @@ public class Hangar extends Application<HangarConfiguration> {
     
 	@Override
 	public void run(HangarConfiguration configuration, Environment environment)	throws Exception 
-	{	
+	{			
 		// When the application starts, we create the repositories we want to manage
 		// from the configuration file that was passed in at startup.
 		List<IRepository> repos = configuration.getRepositories();
@@ -43,7 +43,7 @@ public class Hangar extends Application<HangarConfiguration> {
 		// with these configurations - as well as registering the repository endpoints themselves.
 		for(IRepository repo : repos)
 		{
-			repo.loadRepository();
+			repo.loadRepository(configuration, environment);
 			
 			for(String key : repo.getHealthChecks().keySet())
 			{

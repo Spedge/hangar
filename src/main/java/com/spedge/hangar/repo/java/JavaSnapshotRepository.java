@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageException;
 
 public class JavaSnapshotRepository extends JavaRepository
@@ -45,7 +46,7 @@ public class JavaSnapshotRepository extends JavaRepository
 		
 		try 
 		{
-			IndexArtifact ia = getStorage().generateArtifactPath(key);
+			IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
 			getIndex().addArtifact(key, ia);
 			getStorage().uploadSnapshotArtifactStream(ia, filename, uploadedInputStream);
 			return Response.ok().build();
@@ -90,7 +91,7 @@ public class JavaSnapshotRepository extends JavaRepository
 		
 		try 
 		{
-			IndexArtifact ia = getStorage().generateArtifactPath(key);
+			IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
 			getIndex().addArtifact(key, ia);
 			getStorage().uploadSnapshotArtifactStream(ia, "maven-metadata.xml" + type, uploadedInputStream);
 			return Response.ok().build();

@@ -1,21 +1,27 @@
+storage:
+  store: local
+  path: '<your-path>'
+
+artifactIndex:
+  index: in-memory
+  
 repositories:
 - id: snapshot
   type: java-snapshot
-  storage: 
-    type: local
-    path: '<your-path>\java-proxy'
-    size: 20G
+  storageConfiguration: 
+    uploadPath: 'java-snapshots'
+    limit: 20G
     
 - id: release
   type: java-release
-  storage:
-    type: local
-    path: '<your-path>\java-releases'
-    size: 10G
-    
+  storageConfiguration:
+    uploadPath: 'java-releases'
+    limit: 10G
+
 - id: download
   type: java-download
-  storage:
-    type: local
-    path: '<your-path>\java-proxy'
-    size: 40G
+  storageConfiguration:
+    uploadPath: 'java-proxy'
+    limit: 40G
+  proxy:
+  - https://repo.maven.apache.org/maven2

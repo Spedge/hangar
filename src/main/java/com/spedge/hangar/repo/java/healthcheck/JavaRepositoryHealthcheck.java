@@ -1,4 +1,4 @@
-package com.spedge.hangar.repo.java;
+package com.spedge.hangar.repo.java.healthcheck;
 
 import com.codahale.metrics.health.HealthCheck;
 

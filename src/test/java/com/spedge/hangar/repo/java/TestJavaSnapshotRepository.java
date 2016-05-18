@@ -6,9 +6,11 @@ import java.io.InputStream;
 
 import org.junit.Test;
 
-import com.spedge.hangar.index.IIndex;
+import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.InMemoryIndex;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.testutils.TestStorage;
 import com.spedge.hangar.testutils.TestStorage.FakeStreamingOutput;
@@ -28,12 +30,19 @@ public class TestJavaSnapshotRepository {
 		// Add mock storage and index to repo
 		JavaSnapshotRepository jsr = new JavaSnapshotRepository();
 		
-		TestStorage storage = new TestStorage();
-		jsr.setStorage(storage);
+		StorageConfiguration sc = new StorageConfiguration();
+		sc.setUploadPath("test-path");
 		
-		IIndex index = InMemoryIndex.getInstance();
-		jsr.setIndex(index);
-	
+		TestStorage storage = new TestStorage();
+		jsr.setStorageConfiguration(sc);
+		InMemoryIndex index = new InMemoryIndex();
+		
+		HangarConfiguration hc = new HangarConfiguration();
+		hc.setStorage(storage);
+		hc.setIndex(index);
+
+		jsr.loadRepository(hc, null);
+			
 		// Add our mock artifact
 		JavaIndexKey key = new JavaIndexKey(group + ":" + artifact + ":" + version);
 		IndexArtifact ia = storage.generateArtifactPath(key);

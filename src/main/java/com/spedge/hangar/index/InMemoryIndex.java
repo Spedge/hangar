@@ -3,16 +3,16 @@ package com.spedge.hangar.index;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
 
 
 public class InMemoryIndex implements IIndex {
 	
-	private static InMemoryIndex instance;
 	private Map<String, IndexArtifact> index;
 	
-	private InMemoryIndex()
+	public InMemoryIndex()
 	{
 		this.index = new HashMap<String, IndexArtifact>();
 	}
@@ -32,20 +32,11 @@ public class InMemoryIndex implements IIndex {
 		return ia;
 	}
 
-	public void load(IStorage storage) throws StorageException
+	public void load(RepositoryType type, IStorage storage, String uploadPath) throws StorageException
 	{
-		for(IndexKey key : storage.getArtifactKeys())
+		for(IndexKey key : storage.getArtifactKeys(type, uploadPath))
 		{
-			index.put(key.toString(), storage.generateArtifactPath(key));
+			index.put(key.toString(), storage.generateArtifactPath(type, uploadPath, key));
 		}
-	}
-
-	public static IIndex getInstance() 
-	{
-		if(instance == null)
-		{
-			instance = new InMemoryIndex();
-		}
-		return instance;
 	}
 }

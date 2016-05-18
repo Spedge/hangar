@@ -1,4 +1,4 @@
-package com.spedge.hangar.repo.java;
+package com.spedge.hangar.repo.java.index;
 
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;

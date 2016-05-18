@@ -24,7 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.io.ByteStreams;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.repo.java.JavaIndexKey;
+import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.Storage;
 
 public class LocalStorage extends Storage
@@ -33,13 +34,10 @@ public class LocalStorage extends Storage
 	
 	@NotEmpty
 	private String path;
-	
-	@NotEmpty
-	private String size;
 
 	public HealthCheck getHealthcheck() 
 	{
-		if(check == null) { check = new LocalStorageHealthcheck(path, size); }
+		if(check == null) { check = new LocalStorageHealthcheck(path); }
 		return check;
 	}
 
@@ -53,37 +51,28 @@ public class LocalStorage extends Storage
 		Files.createDirectories(Paths.get(path));
 		this.path = path;
 	}
-
-	@JsonProperty
-	public String getSize() {
-		return size;
-	}
-
-	@JsonProperty
-	public void setSize(String size) {
-		this.size = size;
-	}
 	
 	// From the JavaIndexKey (containing GAV params)
 	// generate the path that it should go into on local storage.
 	@Override
-	protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key)
+	protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath)
 	{
 		IndexArtifact ia = new IndexArtifact();
 		String version = key.getVersion().isEmpty()? "" : "/" + key.getVersion();
-		ia.setLocation("/" + key.getGroup().replace('.', '/') + "/" + key.getArtifact() + version);
+		ia.setLocation("/" + uploadPath + "/" + key.getGroup().replace('.', '/') + "/" + key.getArtifact() + version);
 		return ia;
 	}
 	
 	@Override
-	public List<IndexKey> getArtifactKeys() throws LocalStorageException
+	public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath) throws LocalStorageException
 	{
 		try 
 		{
+			Path sourcePath = Paths.get(path, uploadPath);
 			
-			List<IndexKey> paths = Files.walk(Paths.get(path))
+			List<IndexKey> paths = Files.walk(Paths.get(sourcePath.toString()))
 								        .filter(Files::isRegularFile)
-								        .map(e -> e.toString().replace(path, ""))
+								        .map(e -> e.toString().replace(sourcePath.toString(), ""))
 								        .map(e -> e.subSequence(0, e.lastIndexOf("\\")).toString())
 								        .map(e -> e.substring(1, StringUtils.lastOrdinalIndexOf(e, "\\", 2)).replace("\\", ".") 
 								        		                   + ":" + e.substring(StringUtils.lastOrdinalIndexOf(e, "\\", 2), e.lastIndexOf("\\")).replace("\\", "")
@@ -92,7 +81,7 @@ public class LocalStorage extends Storage
 								        .map(e -> new IndexKey(type, e))
 								        .collect(Collectors.toList());
 			
-			logger.info(paths.size() + " Artifacts Indexed under " + path);
+			logger.info(paths.size() + " Artifacts Indexed under " + sourcePath.toString());
 			return paths;
 		} 
 		catch (IOException e) 

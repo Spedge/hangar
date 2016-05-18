@@ -13,17 +13,16 @@ import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.storage.local.LocalStorage;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "store")
 @JsonSubTypes({
     @JsonSubTypes.Type(value=LocalStorage.class, name="local"),
 }) 
 public interface IStorage {
 	
-	void setType(RepositoryType type);
 	HealthCheck getHealthcheck();
 	
-	List<IndexKey> getArtifactKeys() throws StorageException;
-	IndexArtifact generateArtifactPath(IndexKey key) throws StorageException;
+	List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath) throws StorageException;
+	IndexArtifact generateArtifactPath(RepositoryType type, String uploadPath, IndexKey key) throws StorageException;
 	
 	StreamingOutput getArtifactStream(IndexArtifact key, String filename);
 	void uploadReleaseArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException;

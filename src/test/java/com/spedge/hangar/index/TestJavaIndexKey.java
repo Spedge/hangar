@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.spedge.hangar.repo.java.JavaIndexKey;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 
 public class TestJavaIndexKey {
 	

@@ -1,6 +1,5 @@
 package com.spedge.hangar.repo.java;
 
-
 public class JavaReleaseRepository extends JavaRepository
 {
 //	@POST

@@ -17,6 +17,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageException;
 
 public class JavaDownloadRepository extends JavaRepository {
@@ -31,7 +32,7 @@ public class JavaDownloadRepository extends JavaRepository {
 			                           @PathParam("filename") String filename)
 	{
 		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
-	    logger.info("[Downloading Artifact] " + key);
+		logger.info("[Downloading Artifact] " + key);
 	    
 	    try
 	    {
@@ -52,10 +53,12 @@ public class JavaDownloadRepository extends JavaRepository {
 	
 			    	if(resp.getStatus() == HttpStatus.OK_200)
 			    	{
-			    		logger.debug("[Proxy] Downloading from " + source);
-			    		IndexArtifact ia = getStorage().generateArtifactPath(key);
-						getIndex().addArtifact(key, ia);
-						getStorage().uploadSnapshotArtifactStream(ia, filename, resp.readEntity(InputStream.class));		
+			    		logger.info("[Proxy] Downloading from " + source);
+			    		
+			    		IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
+			    		getIndex().addArtifact(key, ia);
+						getStorage().uploadSnapshotArtifactStream(ia, filename, resp.readEntity(InputStream.class));
+						resp.close();
 						return getArtifact(key, filename);
 			    	}
 		    	}

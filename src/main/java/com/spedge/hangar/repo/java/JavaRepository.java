@@ -3,7 +3,6 @@ package com.spedge.hangar.repo.java;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
@@ -14,30 +13,34 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
-import com.spedge.hangar.index.InMemoryIndex;
 import com.spedge.hangar.repo.IRepository;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
+import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
+
+import io.dropwizard.setup.Environment;
 
 @Path("/java")
 public abstract class JavaRepository implements IRepository
 {
 	final static Logger logger = LoggerFactory.getLogger(JavaRepository.class);
 	private HealthCheck check;
+	private IStorage storage;
 	private IIndex index;
+	private StorageConfiguration storageConfig;
+	private RepositoryType type = RepositoryType.JAVA;
 	
 	@NotEmpty
 	private String id;
-
-	@NotNull
-	private IStorage storage;
 	
 	public JavaRepository()
 	{
 		check = new JavaRepositoryHealthcheck();
-		setIndex(InMemoryIndex.getInstance());
 	}
 	
 	@JsonProperty
@@ -49,31 +52,7 @@ public abstract class JavaRepository implements IRepository
 	public void setId(String id) {
 		this.id = id;
 	}
-	
-	@JsonProperty
-	public IStorage getStorage() {
-		return storage;
-	}
-
-	@JsonProperty
-	public void setStorage(IStorage storage) {
-		this.storage = storage;
-	}
-		
-	public IIndex getIndex() {
-		return index;
-	}
-
-	public void setIndex(IIndex index) {
-		this.index = index;
-	}
-	
-	@Override
-	public void loadRepository() throws StorageException {
-		getStorage().setType(RepositoryType.JAVA);
-		getIndex().load(storage);
-	}
-
+			
 	public Map<String, HealthCheck> getHealthChecks() {
 		Map<String, HealthCheck> checks = new HashMap<String, HealthCheck>();
 		checks.put("java_repo", check);
@@ -81,11 +60,46 @@ public abstract class JavaRepository implements IRepository
 		return checks;
 	}
 	
+	@Override
+	public IStorage getStorage()
+	{
+		return storage;
+	}
+		
+	@Override
+	public IIndex getIndex()
+	{
+		return index;
+	}
+	
+	public void setStorageConfiguration(StorageConfiguration storageConfig) 
+	{
+		this.storageConfig = storageConfig;	
+	}
+	
+	public RepositoryType getType()
+	{
+		return type;
+	}
+	
+	public String getPath()
+	{
+		return storageConfig.getUploadPath();
+	}
+	
+	@Override
+	public void loadRepository(HangarConfiguration configuration, Environment environment) throws StorageException 
+	{
+		storage = configuration.getStorage();
+		index = configuration.getIndex();
+		index.load(type, storage, storageConfig.getUploadPath());
+	}
+	
 	protected StreamingOutput getArtifact(JavaIndexKey key, String filename) 
 	{
-		if(getIndex().isArtifact(key))
+		if(index.isArtifact(key))
 		{
-			return getStorage().getArtifactStream(getIndex().getArtifact(key), filename);
+			return getStorage().getArtifactStream(index.getArtifact(key), filename);
 		}
 		else
 		{
