@@ -8,8 +8,9 @@ https://xkcd.com/927/
 So far...
 
 * (Java) Will proxy artifacts from remote repositories, saving copy to the storage layer as it passes them on.
-* (Java) Will accept snapshot artifacts to upload. Not sure about downloading yet...
-* (Java) Will re-index from local storage
+* (Java) In-memory index for quick identification of artifacts
+* (Java) Will re-index from local storage using streams (super quick)
+* (Java) Will accept snapshot artifacts to upload. Not sure about downloading yet... :)
 * (Java) Allows seperate storage for snapshots, releases and proxy data.
 
 To go...
@@ -21,10 +22,10 @@ To go...
 
 # Run Me
 
-1) Clone the repo.
-2) Run `mvn package` at the root of the project.
-3) Run `docker build -t hangar:latest -f ./etc/docker/app/Dockerfile .` from the root of the project
-4) Run `docker run -p 8080:8080 hangar:latest`
+1. Clone the repo.
+2. Run `mvn package` at the root of the project.
+3. Run `docker build -t hangar:latest -f ./etc/docker/app/Dockerfile .` from the root of the project
+4. Run `docker run -p 8080:8080 hangar:latest`
 
 You should see the following...
 
