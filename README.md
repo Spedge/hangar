@@ -7,6 +7,7 @@ https://xkcd.com/927/
 
 So far...
 
+* **New** (Java) Allow upload of releases
 * (Java) Will proxy artifacts from remote repositories, saving copy to the storage layer as it passes them on.
 * (Java) In-memory index for quick identification of artifacts
 * (Java) Will re-index from local storage using streams (super quick)
@@ -16,7 +17,6 @@ So far...
 To go...
 
 * (Java) Allow downloading of latest snapshot
-* (Java) Allow upload of releases
 * (Java) Create zookeeper-based index
 * (Java) Retention policies on a repo-by-repo basis.
 
