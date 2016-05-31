@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
+import com.spedge.hangar.repo.RepositoryLanguage;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.local.LocalStorageException;
@@ -18,12 +19,12 @@ public abstract class Storage implements IStorage
 	{
 		IndexArtifact ia;
 		
-		if(type.equals(RepositoryType.JAVA)) { ia = generateJavaArtifactPath(new JavaIndexKey(key.toPath()), uploadPath); }
+		if(type.getLanguage().equals(RepositoryLanguage.JAVA)) { ia = generateJavaArtifactPath(new JavaIndexKey(type, key.toPath()), uploadPath); }
 		else throw new LocalStorageException();
 		
 		return ia;
 	}
 	
 	// These two methods allow for the creation of Java-specific Keys and Paths depending on GAV Parameters
-	protected abstract IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath);
+	protected abstract IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath) throws LocalStorageException;
 }

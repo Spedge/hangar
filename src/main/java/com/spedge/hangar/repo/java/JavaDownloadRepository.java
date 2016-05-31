@@ -17,11 +17,13 @@ import javax.ws.rs.core.StreamingOutput;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageException;
 
 public class JavaDownloadRepository extends JavaRepository {
 
+	private RepositoryType repositoryType = RepositoryType.PROXY_JAVA;
 	private String[] proxy;
 	
 	@GET
@@ -31,7 +33,7 @@ public class JavaDownloadRepository extends JavaRepository {
 			                           @PathParam("artifact") String artifact,
 			                           @PathParam("filename") String filename)
 	{
-		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
 		logger.info("[Downloading Artifact] " + key);
 	    
 	    try
@@ -78,5 +80,10 @@ public class JavaDownloadRepository extends JavaRepository {
 
 	public void setProxy(String[] proxy) {
 		this.proxy = proxy;
+	}
+
+	@Override
+	public RepositoryType getType() {
+		return repositoryType;
 	}
 }

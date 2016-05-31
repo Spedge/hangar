@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.InMemoryIndex;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
@@ -44,7 +45,7 @@ public class TestJavaSnapshotRepository {
 		jsr.loadRepository(hc, null);
 			
 		// Add our mock artifact
-		JavaIndexKey key = new JavaIndexKey(group + ":" + artifact + ":" + version);
+		JavaIndexKey key = new JavaIndexKey(RepositoryType.SNAPSHOT_JAVA, group + ":" + artifact + ":" + version);
 		IndexArtifact ia = storage.generateArtifactPath(key);
 		index.addArtifact(key, ia);
 		

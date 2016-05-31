@@ -9,9 +9,9 @@ public class JavaIndexKey extends IndexKey {
 	private String artifact = "";
 	private String version = "";
 		
-	public JavaIndexKey(String key)
+	public JavaIndexKey(RepositoryType type, String key)
 	{
-		super(RepositoryType.JAVA, key);
+		super(type, key);
 		
 		String[] split = key.split(":");
 		
@@ -20,9 +20,9 @@ public class JavaIndexKey extends IndexKey {
 		this.version = (split.length > 2)? split[2] : "";
 	}
 	
-	public JavaIndexKey(String group, String artifact, String version)
+	public JavaIndexKey(RepositoryType type, String group, String artifact, String version)
 	{
-		super(RepositoryType.JAVA, group + ":" + artifact + ":" + version);
+		super(type, group + ":" + artifact + ":" + version);
 
 		this.group = group;
 		this.artifact = artifact;

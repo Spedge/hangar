@@ -5,7 +5,7 @@ import com.spedge.hangar.repo.RepositoryType;
 public class IndexKey {
 
 	private String key;
-	private RepositoryType type = RepositoryType.JAVA;
+	private RepositoryType type = RepositoryType.UNKNOWN;
 	
 	public IndexKey(RepositoryType type, String key)
 	{
@@ -13,11 +13,16 @@ public class IndexKey {
 		this.type = type;
 	}
 	
+	public RepositoryType getType()
+	{
+		return type;
+	}
+	
 	public String toPath() { 
 		return key;
 	}
 
 	public String toString() {
-		return type + ":" + key;
+		return type.getLanguage() + ":" + key;
 	}	
 }

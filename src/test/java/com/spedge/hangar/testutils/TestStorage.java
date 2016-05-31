@@ -15,9 +15,9 @@ import com.codahale.metrics.health.HealthCheck;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.JavaIndexArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
-import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 
 public class TestStorage implements IStorage 
@@ -34,7 +34,7 @@ public class TestStorage implements IStorage
 	}
 
 	public IndexArtifact generateArtifactPath(JavaIndexKey key) {
-		IndexArtifact ia = new IndexArtifact();
+		JavaIndexArtifact ia = new JavaIndexArtifact();
 		ia.setLocation(key.toString());
 		return ia;
 	}

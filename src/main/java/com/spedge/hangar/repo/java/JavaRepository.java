@@ -1,10 +1,13 @@
 package com.spedge.hangar.repo.java;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -15,6 +18,7 @@ import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
+import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.repo.IRepository;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
@@ -33,7 +37,6 @@ public abstract class JavaRepository implements IRepository
 	private IStorage storage;
 	private IIndex index;
 	private StorageConfiguration storageConfig;
-	private RepositoryType type = RepositoryType.JAVA;
 	
 	@NotEmpty
 	private String id;
@@ -77,10 +80,7 @@ public abstract class JavaRepository implements IRepository
 		this.storageConfig = storageConfig;	
 	}
 	
-	public RepositoryType getType()
-	{
-		return type;
-	}
+	public abstract RepositoryType getType();
 	
 	public String getPath()
 	{
@@ -92,7 +92,7 @@ public abstract class JavaRepository implements IRepository
 	{
 		storage = configuration.getStorage();
 		index = configuration.getIndex();
-		index.load(type, storage, storageConfig.getUploadPath());
+		index.load(getType(), storage, storageConfig.getUploadPath());
 	}
 	
 	protected StreamingOutput getArtifact(JavaIndexKey key, String filename) 
@@ -106,4 +106,19 @@ public abstract class JavaRepository implements IRepository
 			throw new NotFoundException();
 		}
 	}	
+	
+	protected Response addArtifact(JavaIndexKey key, String filename, InputStream uploadedInputStream)
+	{
+		try 
+		{
+			IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
+			getIndex().addArtifact(key, ia);
+			getStorage().uploadSnapshotArtifactStream(ia, filename, uploadedInputStream);
+			return Response.ok().build();
+		} 
+		catch (StorageException e) 
+		{
+			throw new InternalServerErrorException();
+		}
+	}
 }

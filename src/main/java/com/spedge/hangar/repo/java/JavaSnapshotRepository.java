@@ -4,8 +4,6 @@ import java.io.InputStream;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -13,12 +11,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
-import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
-import com.spedge.hangar.storage.StorageException;
 
 public class JavaSnapshotRepository extends JavaRepository
 {
+	private RepositoryType repositoryType = RepositoryType.SNAPSHOT_JAVA;
+	
 	@GET
 	@Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
 	public StreamingOutput getSnapshotArtifact(@PathParam("group") String group, 
@@ -26,7 +25,7 @@ public class JavaSnapshotRepository extends JavaRepository
 			                                   @PathParam("version") String version,
 			                                   @PathParam("filename") String filename)
 	{
-		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.') + ":" + artifact + ":" + version);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
 	    logger.debug("[Downloading Snapshot] " + key);
 	    
 		return getArtifact(key, filename);
@@ -41,21 +40,10 @@ public class JavaSnapshotRepository extends JavaRepository
 					               @PathParam("filename") String filename,
 			                       InputStream uploadedInputStream)
 	{
-		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
 		logger.debug("[Uploading Snapshot] " + key.toString());
 		
-		try 
-		{
-			IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
-			getIndex().addArtifact(key, ia);
-			getStorage().uploadSnapshotArtifactStream(ia, filename, uploadedInputStream);
-			return Response.ok().build();
-		} 
-		catch (StorageException e) 
-		{
-			throw new InternalServerErrorException();
-		}
-		
+		return addArtifact(key, filename, uploadedInputStream);
 	}
 	
 	@GET
@@ -65,17 +53,10 @@ public class JavaSnapshotRepository extends JavaRepository
 						               @PathParam("version") String version,
 									   @PathParam("type") String type)
 	{
-		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.'), artifact, version);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
 	    logger.debug("[Downloading Metadata] " + key.toString());
 	    
-		if(getIndex().isArtifact(key))
-		{
-			return getStorage().getArtifactStream(getIndex().getArtifact(key), "maven-metadata.xml" + type);
-		}
-		else
-		{
-			throw new NotFoundException();
-		}
+		return getArtifact(key, "maven-metadata.xml" + type);
 	}
 	
 	@PUT
@@ -86,19 +67,14 @@ public class JavaSnapshotRepository extends JavaRepository
 								   @PathParam("type") String type,
 			                       InputStream uploadedInputStream)
 	{
-		JavaIndexKey key = new JavaIndexKey(group.replace('/', '.') + ":" + artifact);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
 		logger.debug("[Uploading Metadata] " + key.toString());
 		
-		try 
-		{
-			IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
-			getIndex().addArtifact(key, ia);
-			getStorage().uploadSnapshotArtifactStream(ia, "maven-metadata.xml" + type, uploadedInputStream);
-			return Response.ok().build();
-		} 
-		catch (StorageException e) 
-		{
-			throw new InternalServerErrorException();
-		}
+		return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
+	}
+	
+	public RepositoryType getType()
+	{
+		return repositoryType;
 	}
 }

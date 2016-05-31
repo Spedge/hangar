@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -25,6 +26,8 @@ import com.google.common.io.ByteStreams;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.JavaIndexArtifact;
+import com.spedge.hangar.repo.java.JavaReleaseArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.Storage;
 
@@ -55,11 +58,44 @@ public class LocalStorage extends Storage
 	// From the JavaIndexKey (containing GAV params)
 	// generate the path that it should go into on local storage.
 	@Override
-	protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath)
+	protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath) throws LocalStorageException
 	{
-		IndexArtifact ia = new IndexArtifact();
+		IndexArtifact ia = null;
 		String version = key.getVersion().isEmpty()? "" : "/" + key.getVersion();
-		ia.setLocation("/" + uploadPath + "/" + key.getGroup().replace('.', '/') + "/" + key.getArtifact() + version);
+		String location = "/" + uploadPath + "/" + key.getGroup().replace('.', '/') + "/" + key.getArtifact() + version;
+		
+		if(key.getType().equals(RepositoryType.RELEASE_JAVA))
+		{
+			ia = new JavaReleaseArtifact();
+			ia.setLocation(location);
+			
+			try
+			{
+				// Need to generate current state - add which files we have
+				Path sourcePath = Paths.get(path, ia.getLocation());
+				
+				Files.walk(Paths.get(sourcePath.toString()))
+				      .filter(Files::isRegularFile)
+				      .map(e -> e.toString().replace(sourcePath.toString(), ""))
+				      .map(e -> e.substring(e.lastIndexOf("\\"), e.length()).toString())
+				      .forEach(ia::setStoredFile);
+			}
+			catch (NoSuchFileException nsfe)
+			{
+				logger.info("[LocalStorage] New Artifact : New Path " + ia.getLocation());
+			}
+			catch (IOException e) 
+			{
+				logger.info(e.getMessage());
+				throw new LocalStorageException();
+			}
+		}
+		else
+		{
+			ia = new JavaIndexArtifact();
+			ia.setLocation(location);
+		}
+		
 		return ia;
 	}
 	
@@ -69,6 +105,7 @@ public class LocalStorage extends Storage
 		try 
 		{
 			Path sourcePath = Paths.get(path, uploadPath);
+			long start = System.currentTimeMillis();
 			
 			List<IndexKey> paths = Files.walk(Paths.get(sourcePath.toString()))
 								        .filter(Files::isRegularFile)
@@ -81,7 +118,8 @@ public class LocalStorage extends Storage
 								        .map(e -> new IndexKey(type, e))
 								        .collect(Collectors.toList());
 			
-			logger.info(paths.size() + " Artifacts Indexed under " + sourcePath.toString());
+			long end = System.currentTimeMillis();
+			logger.info(paths.size() + " Artifacts Indexed under " + sourcePath.toString() + " in " + (end - start)  + "ms");
 			return paths;
 		} 
 		catch (IOException e) 
