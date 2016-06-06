@@ -15,7 +15,7 @@ public class JavaIndexKey extends IndexKey {
 		
 		String[] split = key.split(":");
 		
-		this.group = (split.length > 0)? split[0] : "";
+		this.group = split[0];
 		this.artifact = (split.length > 1)? split[1] : "";
 		this.version = (split.length > 2)? split[2] : "";
 	}

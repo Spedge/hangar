@@ -27,7 +27,6 @@ import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaIndexArtifact;
-import com.spedge.hangar.repo.java.JavaReleaseArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.Storage;
 
@@ -60,40 +59,30 @@ public class LocalStorage extends Storage
 	@Override
 	protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath) throws LocalStorageException
 	{
-		IndexArtifact ia = null;
+		IndexArtifact ia = new JavaIndexArtifact();
 		String version = key.getVersion().isEmpty()? "" : "/" + key.getVersion();
 		String location = "/" + uploadPath + "/" + key.getGroup().replace('.', '/') + "/" + key.getArtifact() + version;
+		ia.setLocation(location);
 		
-		if(key.getType().equals(RepositoryType.RELEASE_JAVA))
+		try
 		{
-			ia = new JavaReleaseArtifact();
-			ia.setLocation(location);
+			// Need to generate current state - add which files we have
+			Path sourcePath = Paths.get(path, ia.getLocation());
 			
-			try
-			{
-				// Need to generate current state - add which files we have
-				Path sourcePath = Paths.get(path, ia.getLocation());
-				
-				Files.walk(Paths.get(sourcePath.toString()))
-				      .filter(Files::isRegularFile)
-				      .map(e -> e.toString().replace(sourcePath.toString(), ""))
-				      .map(e -> e.substring(e.lastIndexOf("\\"), e.length()).toString())
-				      .forEach(ia::setStoredFile);
-			}
-			catch (NoSuchFileException nsfe)
-			{
-				logger.info("[LocalStorage] New Artifact : New Path " + ia.getLocation());
-			}
-			catch (IOException e) 
-			{
-				logger.info(e.getMessage());
-				throw new LocalStorageException();
-			}
+			Files.walk(Paths.get(sourcePath.toString()))
+			      .filter(Files::isRegularFile)
+			      .map(e -> e.toString().replace(sourcePath.toString(), ""))
+			      .map(e -> e.substring(e.lastIndexOf("\\"), e.length()).toString())
+			      .forEach(ia::setStoredFile);
 		}
-		else
+		catch (NoSuchFileException nsfe)
 		{
-			ia = new JavaIndexArtifact();
-			ia.setLocation(location);
+			logger.info("[LocalStorage] New Artifact : New Path " + ia.getLocation());
+		}
+		catch (IOException e) 
+		{
+			logger.info(e.getMessage());
+			throw new LocalStorageException();
 		}
 		
 		return ia;

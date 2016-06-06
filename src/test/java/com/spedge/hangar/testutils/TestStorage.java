@@ -67,5 +67,10 @@ public class TestStorage implements IStorage
 	public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath) throws StorageException { return new ArrayList<IndexKey>(); }
 
 	@Override
-	public IndexArtifact generateArtifactPath(RepositoryType type, String uploadPath, IndexKey key) throws StorageException { return null; }
+	public IndexArtifact generateArtifactPath(RepositoryType type, String uploadPath, IndexKey key) throws StorageException 
+	{ 
+		IndexArtifact ia = new JavaIndexArtifact();
+		ia.setLocation("fakestorage");
+		return ia;
+	}
 }
