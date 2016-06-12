@@ -20,6 +20,7 @@ import com.spedge.hangar.index.IndexArtifact;
 public class JavaIndexArtifact extends IndexArtifact
 {
 	private Map<String, Boolean> fileTypes;
+	private String snapshotVersion = "";
 	
 	public JavaIndexArtifact()
 	{
@@ -36,5 +37,15 @@ public class JavaIndexArtifact extends IndexArtifact
 	protected Map<String, Boolean> getFileTypes() 
 	{
 		return fileTypes;
+	}
+	
+	public String getSnapshotVersion()
+	{
+		return snapshotVersion;
+	}
+	
+	public void setSnapshotVersion(String snapshotVersion)
+	{
+		this.snapshotVersion = snapshotVersion;
 	}
 }

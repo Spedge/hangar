@@ -129,7 +129,9 @@ public class LocalStorage extends Storage
 	            
 	            public void write(OutputStream os) throws IOException, WebApplicationException 
 	            {
-            		ByteStreams.copy(new FileInputStream(artifact_path), os);
+	            	FileInputStream fis = new FileInputStream(artifact_path);
+            		ByteStreams.copy(fis, os);
+            		fis.close();
 	            }
 	        };
     	}
@@ -156,7 +158,6 @@ public class LocalStorage extends Storage
 		{
 			Files.createDirectories(outputPath);
 			Files.copy(uploadedInputStream, outputPathArtifact, options);
-			uploadedInputStream.close();
 		} 
 		catch (IOException e) 
 		{

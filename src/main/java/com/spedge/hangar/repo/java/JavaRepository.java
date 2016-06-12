@@ -10,6 +10,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.commons.io.IOUtils;
+import org.eclipse.jetty.http.HttpStatus;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.repo.IRepository;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
@@ -32,7 +35,7 @@ import io.dropwizard.setup.Environment;
 @Path("/java")
 public abstract class JavaRepository implements IRepository
 {
-	final static Logger logger = LoggerFactory.getLogger(JavaRepository.class);
+	protected final static Logger logger = LoggerFactory.getLogger(JavaRepository.class);
 	private HealthCheck check;
 	private IStorage storage;
 	private IIndex index;
@@ -107,18 +110,64 @@ public abstract class JavaRepository implements IRepository
 		}
 	}	
 	
+	protected Response addMetadata(JavaIndexKey key, InputStream in)
+	{
+		// Use the input to write it to disk
+		IndexArtifact ia = addArtifactToStorage(key, "maven-metadata.xml", in);
+		closeAllStreams(in);
+		
+		try
+		{
+			// Once we're happy it's there, update the index.
+			index.addArtifact(key, ia);
+		}
+		catch(IndexConfictException ice)
+		{
+			return Response.status(HttpStatus.CONFLICT_409).build();
+		} 
+		return Response.ok().build();
+	}
+	
 	protected Response addArtifact(JavaIndexKey key, String filename, InputStream uploadedInputStream)
 	{
+		// If we simply have an artifact to add that has no effect on the index, go ahead and get it done.
+		addArtifactToStorage(key, filename, uploadedInputStream);
+		closeAllStreams(uploadedInputStream);
+		return Response.ok().build();
+	}
+	
+	/*
+	 * This concentrates on actually getting the artifact into storage. Saves duplication of code.
+	 */
+	protected IndexArtifact addArtifactToStorage(JavaIndexKey key, String filename, InputStream uploadedInputStream)
+	{
+		// Artifacts are uploaded, but for them to become live they need metadata uploaded.
+		// All this does is save it successfully.
 		try 
 		{
+			// Create the entry for the index that contains current information about the artifact.
 			IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
-			getIndex().addArtifact(key, ia);
+			
+			// Upload the file we need.
 			getStorage().uploadSnapshotArtifactStream(ia, filename, uploadedInputStream);
-			return Response.ok().build();
+
+			return ia;
 		} 
 		catch (StorageException e) 
 		{
 			throw new InternalServerErrorException();
+		} 
+	}
+	
+	/*
+	 * Sometimes we have multiple streams open - this is just a nice way of getting round it.
+	 * Really, it'd be nice if the function took an array but there you go ;)
+	 */
+	protected void closeAllStreams(InputStream... streams)
+	{
+		for(InputStream stream : streams)
+		{
+			IOUtils.closeQuietly(stream);
 		}
 	}
 }

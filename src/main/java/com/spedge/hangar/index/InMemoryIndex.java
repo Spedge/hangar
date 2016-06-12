@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
-
 
 public class InMemoryIndex implements IIndex {
 	
@@ -21,9 +21,23 @@ public class InMemoryIndex implements IIndex {
 		return index.containsKey(key.toString());
 	}
 	
-	public void addArtifact(IndexKey key, IndexArtifact artifact)
+	public void addArtifact(IndexKey key, IndexArtifact artifact) throws IndexConfictException
 	{
-		index.put(key.toString(), artifact);
+		if(index.containsKey(key.toString()))
+		{
+			if(!(index.get(key.toString()) instanceof ReservedArtifact))
+			{
+				index.put(key.toString(), artifact);
+			}
+			else
+			{
+				throw new IndexConfictException();
+			}
+		}
+		else
+		{
+			index.put(key.toString(), artifact);
+		}
 	}
 
 	public IndexArtifact getArtifact(IndexKey key) 
@@ -37,6 +51,27 @@ public class InMemoryIndex implements IIndex {
 		for(IndexKey key : storage.getArtifactKeys(type, uploadPath))
 		{
 			index.put(key.toString(), storage.generateArtifactPath(type, uploadPath, key));
+		}
+	}
+
+	@Override
+	public ReservedArtifact addReservationKey(JavaIndexKey key) 
+	{
+		ReservedArtifact reservation = new ReservedArtifact();
+		index.put(key.toString(), reservation);
+		return reservation;
+	}
+
+	@Override
+	public void addReservedArtifact(JavaIndexKey key, ReservedArtifact reservation, IndexArtifact ia) throws IndexConfictException 
+	{
+		if(index.get(key.toString()).equals(reservation))
+		{
+			index.put(key.toString(), ia);
+		}
+		else
+		{
+			throw new IndexConfictException();
 		}
 	}
 }

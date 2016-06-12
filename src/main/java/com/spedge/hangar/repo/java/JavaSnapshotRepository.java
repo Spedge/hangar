@@ -1,80 +1,72 @@
 package com.spedge.hangar.repo.java;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.xml.bind.JAXB;
 
-import com.spedge.hangar.repo.RepositoryType;
+import org.apache.commons.io.input.TeeInputStream;
+import org.eclipse.jetty.http.HttpStatus;
+
+import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.repo.java.metadata.JavaMetadata;
 
-public class JavaSnapshotRepository extends JavaRepository
+public abstract class JavaSnapshotRepository extends JavaRepository 
 {
-	private RepositoryType repositoryType = RepositoryType.SNAPSHOT_JAVA;
-	
-	@GET
-	@Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
-	public StreamingOutput getSnapshotArtifact(@PathParam("group") String group, 
-			 						           @PathParam("artifact") String artifact,
-			                                   @PathParam("version") String version,
-			                                   @PathParam("filename") String filename)
+	/**
+	 * This version is different as we need to re-write the filename
+	 * with the timestamp for the latest version.
+	 * 
+	 * @param key IndexKey to find the Artifact in the Index
+	 * @param filename Filename from the request
+	 * @return StreamingOutput from the Storage Layer
+	 */
+	protected StreamingOutput getSnapshotArtifact(JavaIndexKey key, String filename) 
 	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
-	    logger.debug("[Downloading Snapshot] " + key);
-	    
-		return getArtifact(key, filename);
+		if(getIndex().isArtifact(key))
+		{
+			JavaIndexArtifact ia = (JavaIndexArtifact) getIndex().getArtifact(key);
+			String snapshotFilename = filename.replace(key.getVersion(), ia.getSnapshotVersion());
+			return getStorage().getArtifactStream(ia, snapshotFilename);
+		}
+		else
+		{
+			throw new NotFoundException();
+		}
 	}
 	
-	@PUT
-	@Consumes(MediaType.WILDCARD)
-	@Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
-	public Response uploadArtifact(@PathParam("group") String group, 
-								   @PathParam("artifact") String artifact,
-					               @PathParam("version") String version,
-					               @PathParam("filename") String filename,
-			                       InputStream uploadedInputStream)
+	protected Response addSnapshotMetadata(JavaIndexKey key, InputStream uploadedInputStream)
 	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
-		logger.debug("[Uploading Snapshot] " + key.toString());
-		
-		return addArtifact(key, filename, uploadedInputStream);
-	}
-	
-	@GET
-	@Path("/{dummy2 : (snapshots)?}{dummy3 : (/)+}{group : .+}{dummy4 : (/)+}{artifact : .+}{dummy5 : (/)?}{version : (?i)[\\d\\.]*(-SNAPSHOT)?}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-	public StreamingOutput getMetadata(@PathParam("group") String group, 
-			 						   @PathParam("artifact") String artifact,
-						               @PathParam("version") String version,
-									   @PathParam("type") String type)
-	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
-	    logger.debug("[Downloading Metadata] " + key.toString());
-	    
-		return getArtifact(key, "maven-metadata.xml" + type);
-	}
-	
-	@PUT
-	@Consumes(MediaType.WILDCARD)
-	@Path("/{dummy2 : (snapshots)?}{dummy3 : (/)+}{group : .+}{dummy4 : (/)+}{artifact : .+}{dummy5 : (/)?}{version : (?i)[\\d\\.]*(-SNAPSHOT)?}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-	public Response uploadMetadata(@PathParam("group") String group, 
-								   @PathParam("artifact") String artifact,
-								   @PathParam("type") String type,
-			                       InputStream uploadedInputStream)
-	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
-		logger.debug("[Uploading Metadata] " + key.toString());
-		
-		return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
-	}
-	
-	public RepositoryType getType()
-	{
-		return repositoryType;
+		try 
+		{			
+			// We need two copies for this to work - we can't just use the request stream twice
+			// as you can't seem to reset it (makes sense)
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			InputStream in = new TeeInputStream(uploadedInputStream, out);
+			
+			// Use the input to write it to disk
+			JavaIndexArtifact ia = (JavaIndexArtifact) addArtifactToStorage(key, "maven-metadata.xml", in);
+			closeAllStreams(in);
+			
+			// Now we need to marshal the XML and determine the current snapshot version.
+			in = new ByteArrayInputStream(out.toByteArray());
+		    JavaMetadata metadata = (JavaMetadata) JAXB.unmarshal(in, JavaMetadata.class);
+			
+		    logger.debug("[Snapshot] Uploading snapshot " + metadata.getVersioning().getSnapshot().getVersion() + " for " + key.toString());
+			ia.setSnapshotVersion(metadata.getVersioning().getSnapshot().getVersion());
+			getIndex().addArtifact(key, ia);
+			
+			closeAllStreams(uploadedInputStream, in);
+			return Response.ok().build();
+		}
+		catch(IndexConfictException ice)
+		{
+			return Response.status(HttpStatus.CONFLICT_409).build();
+		} 
 	}
 }

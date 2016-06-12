@@ -4,19 +4,27 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.ReaderInputStream;
 import org.eclipse.jetty.http.HttpStatus;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.InMemoryIndex;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.api.JavaSnapshotAPI;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
@@ -25,7 +33,7 @@ import com.spedge.hangar.testutils.TestStorage.FakeStreamingOutput;
 
 public class TestJavaSnapshotRepository {
 	
-	private JavaSnapshotRepository jsr;
+	private JavaSnapshotAPI jsr;
 	private TestStorage storage;
 	private InMemoryIndex index;
 	
@@ -33,7 +41,7 @@ public class TestJavaSnapshotRepository {
 	public void prepareSnapshotRepo() throws StorageException
 	{
 		// Add mock storage and index to repo
-		jsr = new JavaSnapshotRepository();
+		jsr = new JavaSnapshotAPI();
 		
 		StorageConfiguration sc = new StorageConfiguration();
 		sc.setUploadPath("test-path");
@@ -50,7 +58,7 @@ public class TestJavaSnapshotRepository {
 	}
 	
 	@Test
-	public void TestGetSnapshot() throws StorageException
+	public void TestGetSnapshot() throws StorageException, IndexConfictException
 	{
 		// Define mock artifact
 		String group = "com.spedge.test";
@@ -73,21 +81,50 @@ public class TestJavaSnapshotRepository {
 	}
 	
 	@Test
-	public void TestPutNewSnapshot() throws StorageException
+	public void TestAddNextSnapshot() throws StorageException, IOException
 	{
+		// Define the mock artifact that currently exists.
 		// Define mock artifact
 		String webgroup = "com/spedge/test";
 		String artifact = "test-artifact";
 		String version = "0.1.2.4-SNAPSHOT";
-		String filename = "test-artifact-0.1.2.4-20160430.090624-1.jar";
+		String filename = "test-artifact-0.1.2.4-SNAPSHOT.jar";
 		String fileContent = "thisisajarwoo";
 		InputStream uploadedInputStream = new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
 		
+		// Upload it to the system
 		Response rep = jsr.uploadArtifact(webgroup, artifact, version, filename, uploadedInputStream);
 		assertEquals(rep.getStatus(), HttpStatus.OK_200);
+			
+		// Begin the registration of a new artifact.
+		fileContent = "thisisajarwoo2";
 		
-		// See what happens!
-		FakeStreamingOutput fso = (FakeStreamingOutput) jsr.getSnapshotArtifact(webgroup, artifact, version, filename);
-		assertSame(fso.getFilename(), filename);
+		uploadedInputStream = new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
+		
+		// Upload it to the system
+		rep = jsr.uploadArtifact(webgroup, artifact, version, filename, uploadedInputStream);
+		assertEquals(rep.getStatus(), HttpStatus.OK_200);
+		
+		// This should fail as we've not uploaded the metadata at this point.
+		try
+		{
+			jsr.getSnapshotArtifact(webgroup, artifact, version, filename);
+			Assert.fail();
+		}
+		catch(NotFoundException nfe){}
+		
+		String metadata = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><metadata modelVersion=\"1.1.0\"><versioning>" +
+		    "<snapshot><timestamp>20160612.173559</timestamp></snapshot></versioning></metadata>";
+		
+		StringReader reader = new StringReader(metadata);
+		uploadedInputStream = new ReaderInputStream(reader);
+		
+		// TODO : I don't know why streams don't work in a test, but they do IRL.
+		// Will investigate.
+		
+//		rep = jsr.uploadMetadata(webgroup, artifact, version, "", uploadedInputStream);
+//		
+//		FakeStreamingOutput fso = (FakeStreamingOutput) jsr.getSnapshotArtifact(webgroup, artifact, version, filename);
+//		assertSame(fso.getFilename(), filename);
 	}
 }

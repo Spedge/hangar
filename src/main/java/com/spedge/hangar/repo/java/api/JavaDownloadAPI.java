@@ -1,4 +1,4 @@
-package com.spedge.hangar.repo.java;
+package com.spedge.hangar.repo.java.api;
 
 import java.io.InputStream;
 
@@ -6,6 +6,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
@@ -13,15 +14,18 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.JavaRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageException;
 
-public class JavaDownloadRepository extends JavaRepository {
+public class JavaDownloadAPI extends JavaRepository {
 
 	private RepositoryType repositoryType = RepositoryType.PROXY_JAVA;
 	private String[] proxy;
@@ -71,6 +75,10 @@ public class JavaDownloadRepository extends JavaRepository {
 	    	{
 				throw new InternalError();
 			}
+	    	catch(IndexConfictException ice)
+	    	{
+	    		throw new WebApplicationException(Status.CONFLICT);
+	    	}
 	    }
 	}
 

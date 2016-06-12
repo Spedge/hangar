@@ -1,4 +1,4 @@
-package com.spedge.hangar.repo.java;
+package com.spedge.hangar.repo.java.api;
 
 import java.io.InputStream;
 
@@ -14,15 +14,16 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.JavaRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 
-public class JavaReleaseRepository extends JavaRepository
+public class JavaReleaseAPI extends JavaRepository
 {
 	private RepositoryType repositoryType = RepositoryType.RELEASE_JAVA;
 		
 	@GET
 	@Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+}/{filename : [^/]+}")
-	public StreamingOutput getSnapshotArtifact(@PathParam("group") String group, 
+	public StreamingOutput getArtifact(@PathParam("group") String group, 
 			 						           @PathParam("artifact") String artifact,
 			                                   @PathParam("version") String version,
 			                                   @PathParam("filename") String filename)
@@ -57,7 +58,7 @@ public class JavaReleaseRepository extends JavaRepository
 	}
 	
 	@GET
-	@Path("/{dummy2 : (releases)?}{dummy3 : (/)+}{group : .+}{dummy4 : (/)+}{artifact : .+}{dummy5 : (/)?}{version : (?i)[\\d\\.]*}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+	@Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]*}/maven-metadata.xml{type : (\\.)?(\\w)*}")
 	public StreamingOutput getMetadata(@PathParam("group") String group, 
 			 						   @PathParam("artifact") String artifact,
 						               @PathParam("version") String version,
@@ -71,7 +72,7 @@ public class JavaReleaseRepository extends JavaRepository
 	
 	@PUT
 	@Consumes(MediaType.WILDCARD)
-	@Path("/{dummy2 : (releases)?}{dummy3 : (/)+}{group : .+}{dummy4 : (/)+}{artifact : .+}{dummy5 : (/)?}{version : (?i)[\\d\\.]*}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+	@Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]*}/maven-metadata.xml{type : (\\.)?(\\w)*}")
 	public Response uploadMetadata(@PathParam("group") String group, 
 								   @PathParam("artifact") String artifact,
 								   @PathParam("type") String type,
@@ -79,7 +80,52 @@ public class JavaReleaseRepository extends JavaRepository
 	{
 		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
 		logger.debug("[Uploading Release] " + key.toString());
-    	return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
+		
+		if(type.isEmpty())
+		{
+			return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
+		}
+		else
+		{
+			return addMetadata(key, uploadedInputStream);
+		}
+	}
+	
+	/*
+	 * This allows us to download the top level metadata - which won't have a version.
+	 * Example Path : /releases/com/spedge/hangar-artifact/maven-metadata.xml
+	 */
+	@GET
+	@Path("/releases/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+	public StreamingOutput getToplevelMetadata(@PathParam("group") String group, 
+					 						   @PathParam("artifact") String artifact,
+											   @PathParam("type") String type)
+	{
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
+	    logger.debug("[Downloading Metadata] " + key.toString());
+	    
+		return getArtifact(key, "maven-metadata.xml" + type);
+	}
+	
+	@PUT
+	@Consumes(MediaType.WILDCARD)
+	@Path("/releases/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+	public Response uploadTopLevelMetadata(@PathParam("group") String group, 
+										   @PathParam("artifact") String artifact,
+										   @PathParam("type") String type,
+					                       InputStream uploadedInputStream)
+	{
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
+		logger.debug("[Uploading Metadata] " + key.toString());
+		
+		if(! type.isEmpty())
+		{
+			return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
+		}
+		else
+		{
+			return addMetadata(key, uploadedInputStream);
+		}
 	}
 	
 	public RepositoryType getType()

@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
-import com.spedge.hangar.repo.java.JavaDownloadRepository;
-import com.spedge.hangar.repo.java.JavaReleaseRepository;
-import com.spedge.hangar.repo.java.JavaSnapshotRepository;
+import com.spedge.hangar.repo.java.api.JavaDownloadAPI;
+import com.spedge.hangar.repo.java.api.JavaReleaseAPI;
+import com.spedge.hangar.repo.java.api.JavaSnapshotAPI;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
 
@@ -17,9 +17,9 @@ import io.dropwizard.setup.Environment;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-    @JsonSubTypes.Type(value=JavaDownloadRepository.class, name="java-download"),
-    @JsonSubTypes.Type(value=JavaReleaseRepository.class, name="java-release"),
-    @JsonSubTypes.Type(value=JavaSnapshotRepository.class, name="java-snapshot"),
+    @JsonSubTypes.Type(value=JavaDownloadAPI.class, name="java-download"),
+    @JsonSubTypes.Type(value=JavaReleaseAPI.class, name="java-release"),
+    @JsonSubTypes.Type(value=JavaSnapshotAPI.class, name="java-snapshot"),
 }) 
 public interface IRepository {
 

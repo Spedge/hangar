@@ -3,6 +3,7 @@ package com.spedge.hangar.index;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
 
@@ -20,7 +21,7 @@ public interface IIndex {
 	boolean isArtifact(IndexKey key);
 	
 	// We can add an artifact to the index like this.
-	void addArtifact(IndexKey key, IndexArtifact artifact);
+	void addArtifact(IndexKey key, IndexArtifact artifact) throws IndexConfictException;
 
 	// Once we're happy with the artifact we want to get,
     // we need details of where to stream it from.
@@ -29,4 +30,10 @@ public interface IIndex {
 	// When the index is empty on startup, we load it 
 	// from the appropriate storage.
 	void load(RepositoryType type, IStorage storage, String path) throws StorageException;
+
+	// This allows a upload to reserve a path before uploading to it.
+	ReservedArtifact addReservationKey(JavaIndexKey key);
+
+	// This allows the update to the reservation to the completed location.
+	void addReservedArtifact(JavaIndexKey key, ReservedArtifact reservation, IndexArtifact ia) throws IndexConfictException;
 }
