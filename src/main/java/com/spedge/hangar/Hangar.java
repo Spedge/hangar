@@ -55,6 +55,8 @@ public class Hangar extends Application<HangarConfiguration> {
 		// This is a path that I can hit to see the details of a request,
 		// something I've found particularly hard to capture with some of the 
 		// crazy multi-requests that go on in dependency management.
+		// 
+		// TODO : Allow this only in debug mode.
 		environment.jersey().register(new TestRequest()); 
 	}
 
