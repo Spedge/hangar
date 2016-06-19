@@ -1,5 +1,6 @@
 package com.spedge.hangar.storage.local;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,7 @@ import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaIndexArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.Storage;
+import com.spedge.hangar.storage.StorageException;
 
 public class LocalStorage extends Storage
 {
@@ -72,7 +74,7 @@ public class LocalStorage extends Storage
 			Files.walk(Paths.get(sourcePath.toString()))
 			      .filter(Files::isRegularFile)
 			      .map(e -> e.toString().replace(sourcePath.toString(), ""))
-			      .map(e -> e.substring(e.lastIndexOf("\\"), e.length()).toString())
+			      .map(e -> e.substring(e.lastIndexOf(File.separator), e.length()).toString())
 			      .forEach(ia::setStoredFile);
 		}
 		catch (NoSuchFileException nsfe)
@@ -96,13 +98,15 @@ public class LocalStorage extends Storage
 			Path sourcePath = Paths.get(path, uploadPath);
 			long start = System.currentTimeMillis();
 			
+			System.out.println("Path" + sourcePath.toString());
+			
 			List<IndexKey> paths = Files.walk(Paths.get(sourcePath.toString()))
 								        .filter(Files::isRegularFile)
 								        .map(e -> e.toString().replace(sourcePath.toString(), ""))
-								        .map(e -> e.subSequence(0, e.lastIndexOf("\\")).toString())
-								        .map(e -> e.substring(1, StringUtils.lastOrdinalIndexOf(e, "\\", 2)).replace("\\", ".") 
-								        		                   + ":" + e.substring(StringUtils.lastOrdinalIndexOf(e, "\\", 2), e.lastIndexOf("\\")).replace("\\", "")
-								        		                   + ":" + e.substring(e.lastIndexOf("\\"), e.length()).replace("\\", ""))
+								        .map(e -> e.subSequence(0, e.lastIndexOf(File.separator)).toString())
+								        .map(e -> e.substring(1, StringUtils.lastOrdinalIndexOf(e, File.separator, 2)).replace(File.separator, ".") 
+								        		                   + ":" + e.substring(StringUtils.lastOrdinalIndexOf(e, File.separator, 2), e.lastIndexOf(File.separator)).replace(File.separator, "")
+								        		                   + ":" + e.substring(e.lastIndexOf(File.separator), e.length()).replace(File.separator, ""))
 								        .distinct()
 								        .map(e -> new IndexKey(type, e))
 								        .collect(Collectors.toList());
@@ -114,6 +118,11 @@ public class LocalStorage extends Storage
 		catch (IOException e) 
 		{
 			logger.info(e.getMessage());
+			throw new LocalStorageException();
+		}
+		catch(Exception iee)
+		{
+			logger.info(iee.getMessage());
 			throw new LocalStorageException();
 		}
 	}
@@ -164,5 +173,18 @@ public class LocalStorage extends Storage
 			logger.error(e.getLocalizedMessage());
 			throw new LocalStorageException();
 		}
+	}
+
+	@Override
+	public void initialiseStoragePath(String uploadPath) throws StorageException {
+		try 
+		{
+			Files.createDirectories(Paths.get(path + "/" + uploadPath));
+		} 
+		catch (IOException e) 
+		{
+			throw new LocalStorageException();
+		}
+		
 	}	
 }

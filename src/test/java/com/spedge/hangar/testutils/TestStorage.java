@@ -73,4 +73,10 @@ public class TestStorage implements IStorage
 		ia.setLocation("fakestorage");
 		return ia;
 	}
+
+	@Override
+	public void initialiseStoragePath(String uploadPath) throws StorageException {
+		// TODO Auto-generated method stub
+		
+	}
 }

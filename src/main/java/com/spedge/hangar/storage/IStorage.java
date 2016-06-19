@@ -27,4 +27,6 @@ public interface IStorage {
 	StreamingOutput getArtifactStream(IndexArtifact key, String filename);
 	void uploadReleaseArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException;
 	void uploadSnapshotArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException;
+
+	void initialiseStoragePath(String uploadPath) throws StorageException;
 }

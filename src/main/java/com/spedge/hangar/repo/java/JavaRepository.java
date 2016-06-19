@@ -96,6 +96,9 @@ public abstract class JavaRepository implements IRepository
 	{
 		storage = configuration.getStorage();
 		index = configuration.getIndex();
+		
+		storage.initialiseStoragePath(storageConfig.getUploadPath());
+		
 		index.load(getType(), storage, storageConfig.getUploadPath());
 	}
 	

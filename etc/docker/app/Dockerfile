@@ -6,7 +6,7 @@ MAINTAINER Stuart Davidson <github@spedge.com>
 ADD etc/docker/docker.yml .
 
 # Copy the latest hangar jar. Be sure to have run mvn package first.
-ADD target/hangar-0.0.1-SNAPSHOT.jar ./hangar.jar
+ADD target/hangar.jar ./hangar.jar
 
 # Need somewhere to keep the data
 VOLUME /data
