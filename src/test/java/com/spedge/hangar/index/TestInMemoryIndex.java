@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.spedge.hangar.index.memory.InMemoryIndex;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;

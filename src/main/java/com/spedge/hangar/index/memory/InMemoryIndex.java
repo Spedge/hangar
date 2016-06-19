@@ -1,8 +1,13 @@
-package com.spedge.hangar.index;
+package com.spedge.hangar.index.memory;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import com.spedge.hangar.index.IIndex;
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexKey;
+import com.spedge.hangar.index.ReservedArtifact;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;

@@ -4,6 +4,7 @@ import java.io.InputStream;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -13,6 +14,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
@@ -46,12 +48,19 @@ public class JavaReleaseAPI extends JavaRepository
 		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
 		logger.debug("[Uploading Release] " + key.toString());
 		
-		if(getIndex().isArtifact(key))
+		try 
 		{
-			if(getIndex().getArtifact(key).isStoredFile(filename))
-		    {
-		    	throw new WebApplicationException(Status.CONFLICT);
-		    }
+			if(getIndex().isArtifact(key))
+			{
+				if(getIndex().getArtifact(key).isStoredFile(filename))
+			    {
+			    	throw new WebApplicationException(Status.CONFLICT);
+			    }
+			}
+		} 
+		catch (IndexException e) 
+		{
+			throw new InternalServerErrorException();
 		}
 	    	
 		return addArtifact(key, filename, uploadedInputStream);
@@ -101,7 +110,7 @@ public class JavaReleaseAPI extends JavaRepository
 					 						   @PathParam("artifact") String artifact,
 											   @PathParam("type") String type)
 	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
 	    logger.debug("[Downloading Metadata] " + key.toString());
 	    
 		return getArtifact(key, "maven-metadata.xml" + type);
@@ -115,7 +124,7 @@ public class JavaReleaseAPI extends JavaRepository
 										   @PathParam("type") String type,
 					                       InputStream uploadedInputStream)
 	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
 		logger.debug("[Uploading Metadata] " + key.toString());
 		
 		if(! type.isEmpty())

@@ -3,6 +3,7 @@ package com.spedge.hangar.repo.java.api;
 import java.io.InputStream;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -20,6 +21,7 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
@@ -73,7 +75,11 @@ public class JavaDownloadAPI extends JavaRepository {
 	    	} 
 	    	catch (StorageException e) 
 	    	{
-				throw new InternalError();
+				throw new InternalServerErrorException();
+			}
+	    	catch (IndexException e) 
+	    	{
+	    		throw new InternalServerErrorException();
 			}
 	    	catch(IndexConfictException ice)
 	    	{

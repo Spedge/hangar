@@ -13,11 +13,9 @@ import io.dropwizard.Configuration;
 
 public class HangarConfiguration extends Configuration {
 
-	//@NotEmpty
 	@JsonProperty
     private IStorage storage;
 	
-	//@NotEmpty
 	@JsonProperty
     private IIndex artifactIndex;
 	

@@ -7,17 +7,18 @@ https://xkcd.com/927/
 
 So far...
 
+* (Java) Create zookeeper-based index
 * (Java) Allow downloading of latest snapshot
 * (Java) Allow upload of releases
 * (Java) Will proxy artifacts from remote repositories, saving copy to the storage layer as it passes them on.
 * (Java) In-memory index for quick identification of artifacts
 * (Java) Will re-index from local storage using streams (super quick)
-* (Java) Will accept snapshot artifacts to upload. Not sure about downloading yet... :)
-* (Java) Allows seperate storage for snapshots, releases and proxy data.
+* (Java) Will accept snapshot artifacts to upload. 
+* (Java) Allows separate storage for snapshots, releases and proxy data.
 
 To go...
 
-* (Java) Create zookeeper-based index
+* (Java) Allow S3-backed Storage
 * (Java) Retention policies on a repo-by-repo basis.
 
 # Run Me

@@ -19,6 +19,7 @@ import com.spedge.hangar.index.IndexArtifact;
  */
 public class JavaIndexArtifact extends IndexArtifact
 {
+	private static final long serialVersionUID = -37333974652565977L;
 	private Map<String, Boolean> fileTypes;
 	private String snapshotVersion = "";
 	

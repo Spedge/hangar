@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -13,6 +14,7 @@ import org.apache.commons.io.input.TeeInputStream;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.repo.java.metadata.JavaMetadata;
 
@@ -28,15 +30,22 @@ public abstract class JavaSnapshotRepository extends JavaRepository
 	 */
 	protected StreamingOutput getSnapshotArtifact(JavaIndexKey key, String filename) 
 	{
-		if(getIndex().isArtifact(key))
+		try 
 		{
-			JavaIndexArtifact ia = (JavaIndexArtifact) getIndex().getArtifact(key);
-			String snapshotFilename = filename.replace(key.getVersion(), ia.getSnapshotVersion());
-			return getStorage().getArtifactStream(ia, snapshotFilename);
-		}
-		else
+			if(getIndex().isArtifact(key))
+			{
+				JavaIndexArtifact ia = (JavaIndexArtifact) getIndex().getArtifact(key);
+				String snapshotFilename = filename.replace(key.getVersion(), ia.getSnapshotVersion());
+				return getStorage().getArtifactStream(ia, snapshotFilename);
+			}
+			else
+			{
+				throw new NotFoundException();
+			}
+		} 
+		catch (IndexException e) 
 		{
-			throw new NotFoundException();
+			throw new InternalServerErrorException();
 		}
 	}
 	
@@ -63,6 +72,10 @@ public abstract class JavaSnapshotRepository extends JavaRepository
 			
 			closeAllStreams(uploadedInputStream, in);
 			return Response.ok().build();
+		}
+		catch(IndexException ie)
+		{
+			return Response.status(HttpStatus.INTERNAL_SERVER_ERROR_500).build();
 		}
 		catch(IndexConfictException ice)
 		{

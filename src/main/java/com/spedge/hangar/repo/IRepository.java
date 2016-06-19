@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.java.api.JavaDownloadAPI;
 import com.spedge.hangar.repo.java.api.JavaReleaseAPI;
 import com.spedge.hangar.repo.java.api.JavaSnapshotAPI;
@@ -42,8 +43,9 @@ public interface IRepository {
 	 * @param configuration
 	 * @param environment
 	 * @throws StorageException
+	 * @throws IndexException 
 	 */
-	void loadRepository(HangarConfiguration configuration, Environment environment) throws StorageException;
+	void loadRepository(HangarConfiguration configuration, Environment environment) throws StorageException, IndexException;
 	
 	/**
 	 * Returns the storage configured for the repositories (One storage for all repos)

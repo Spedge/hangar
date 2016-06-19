@@ -1,9 +1,11 @@
 package com.spedge.hangar.index;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public abstract class IndexArtifact {
-
+public abstract class IndexArtifact implements Serializable
+{
+	private static final long serialVersionUID = -5720959937441417671L;
 	private String location;
 
 	public String getLocation() {

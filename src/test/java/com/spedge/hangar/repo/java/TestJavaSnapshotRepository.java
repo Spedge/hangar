@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.ReaderInputStream;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Assert;
@@ -20,9 +19,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.spedge.hangar.config.HangarConfiguration;
-import com.spedge.hangar.index.InMemoryIndex;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexException;
+import com.spedge.hangar.index.memory.InMemoryIndex;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.api.JavaSnapshotAPI;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
@@ -38,7 +38,7 @@ public class TestJavaSnapshotRepository {
 	private InMemoryIndex index;
 	
 	@Before
-	public void prepareSnapshotRepo() throws StorageException
+	public void prepareSnapshotRepo() throws StorageException, IndexException
 	{
 		// Add mock storage and index to repo
 		jsr = new JavaSnapshotAPI();

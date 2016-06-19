@@ -1,0 +1,28 @@
+storage:
+  store: local
+  path: '<your-path>'
+
+artifactIndex:
+  index: zookeeper
+  connectionString: '<zookeeper-connection-string>'
+  
+repositories:
+- id: snapshot
+  type: java-snapshot
+  storageConfiguration: 
+    uploadPath: 'java-snapshots'
+    limit: 20G
+    
+- id: release
+  type: java-release
+  storageConfiguration:
+    uploadPath: 'java-releases'
+    limit: 10G
+
+- id: download
+  type: java-download
+  storageConfiguration:
+    uploadPath: 'java-proxy'
+    limit: 40G
+  proxy:
+  - https://repo.maven.apache.org/maven2

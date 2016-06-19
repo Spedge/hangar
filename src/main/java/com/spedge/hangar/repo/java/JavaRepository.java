@@ -22,6 +22,7 @@ import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.IRepository;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
@@ -91,7 +92,7 @@ public abstract class JavaRepository implements IRepository
 	}
 	
 	@Override
-	public void loadRepository(HangarConfiguration configuration, Environment environment) throws StorageException 
+	public void loadRepository(HangarConfiguration configuration, Environment environment) throws IndexException, StorageException 
 	{
 		storage = configuration.getStorage();
 		index = configuration.getIndex();
@@ -100,13 +101,20 @@ public abstract class JavaRepository implements IRepository
 	
 	protected StreamingOutput getArtifact(JavaIndexKey key, String filename) 
 	{
-		if(index.isArtifact(key))
+		try 
 		{
-			return getStorage().getArtifactStream(index.getArtifact(key), filename);
-		}
-		else
+			if(index.isArtifact(key))
+			{
+				return getStorage().getArtifactStream(index.getArtifact(key), filename);
+			}
+			else
+			{
+				throw new NotFoundException();
+			}
+		} 
+		catch (IndexException e) 
 		{
-			throw new NotFoundException();
+			throw new InternalServerErrorException();
 		}
 	}	
 	
@@ -120,6 +128,10 @@ public abstract class JavaRepository implements IRepository
 		{
 			// Once we're happy it's there, update the index.
 			index.addArtifact(key, ia);
+		}
+		catch(IndexException ie)
+		{
+			return Response.status(HttpStatus.INTERNAL_SERVER_ERROR_500).build();
 		}
 		catch(IndexConfictException ice)
 		{

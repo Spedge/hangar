@@ -57,7 +57,7 @@ public class JavaSnapshotAPI extends JavaSnapshotRepository
 					 						   @PathParam("artifact") String artifact,
 											   @PathParam("type") String type)
 	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
 	    logger.debug("[Downloading Metadata] " + key.toString());
 	    
 		return getArtifact(key, "maven-metadata.xml" + type);
@@ -71,7 +71,7 @@ public class JavaSnapshotAPI extends JavaSnapshotRepository
 										   @PathParam("type") String type,
 					                       InputStream uploadedInputStream)
 	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
 		logger.debug("[Uploading Metadata] " + key.toString());
 		
 		if(! type.isEmpty())
