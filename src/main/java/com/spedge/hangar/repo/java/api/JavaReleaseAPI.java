@@ -16,10 +16,10 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.JavaRepository;
+import com.spedge.hangar.repo.java.JavaReleaseRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 
-public class JavaReleaseAPI extends JavaRepository
+public class JavaReleaseAPI extends JavaReleaseRepository
 {
 	private RepositoryType repositoryType = RepositoryType.RELEASE_JAVA;
 		
@@ -65,41 +65,7 @@ public class JavaReleaseAPI extends JavaRepository
 	    	
 		return addArtifact(key, filename, uploadedInputStream);
 	}
-	
-	@GET
-	@Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]*}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-	public StreamingOutput getMetadata(@PathParam("group") String group, 
-			 						   @PathParam("artifact") String artifact,
-						               @PathParam("version") String version,
-									   @PathParam("type") String type)
-	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
-	    logger.debug("[Downloading Release] " + key.toString());
-	    
-		return getArtifact(key, "maven-metadata.xml" + type);
-	}
-	
-	@PUT
-	@Consumes(MediaType.WILDCARD)
-	@Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]*}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-	public Response uploadMetadata(@PathParam("group") String group, 
-								   @PathParam("artifact") String artifact,
-								   @PathParam("type") String type,
-			                       InputStream uploadedInputStream)
-	{
-		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.') + ":" + artifact);
-		logger.debug("[Uploading Release] " + key.toString());
 		
-		if(type.isEmpty())
-		{
-			return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
-		}
-		else
-		{
-			return addMetadata(key, uploadedInputStream);
-		}
-	}
-	
 	/*
 	 * This allows us to download the top level metadata - which won't have a version.
 	 * Example Path : /releases/com/spedge/hangar-artifact/maven-metadata.xml
@@ -133,7 +99,7 @@ public class JavaReleaseAPI extends JavaRepository
 		}
 		else
 		{
-			return addMetadata(key, uploadedInputStream);
+			return addReleaseMetadata(key, uploadedInputStream);
 		}
 	}
 	
