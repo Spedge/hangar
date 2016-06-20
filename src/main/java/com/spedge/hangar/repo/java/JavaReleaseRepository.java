@@ -29,7 +29,7 @@ public abstract class JavaReleaseRepository extends JavaRepository
 			InputStream in = new TeeInputStream(uploadedInputStream, out);
 			
 			// Use the input to write it to disk
-			JavaIndexArtifact ia = (JavaIndexArtifact) addArtifactToStorage(key, "maven-metadata.xml", in);
+			addArtifactToStorage(key, "maven-metadata.xml", in);
 			closeAllStreams(in);
 			
 			// Now we need to marshal the XML and determine the current snapshot version.
