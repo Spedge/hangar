@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Spedge/hangar.svg?branch=master)](https://travis-ci.org/Spedge/hangar)
+
 # hangar
 After many, many years of dealing with expensive, monolithic artifact management solutions - I thought I'd give it a go myself. Can't be that hard, right?
 
