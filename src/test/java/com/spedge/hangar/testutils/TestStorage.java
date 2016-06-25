@@ -75,7 +75,7 @@ public class TestStorage implements IStorage
 	}
 
 	@Override
-	public void initialiseStoragePath(String uploadPath) throws StorageException {
+	public void initialiseStorage(String uploadPath) throws StorageException {
 		// TODO Auto-generated method stub
 		
 	}

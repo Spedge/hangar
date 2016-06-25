@@ -94,9 +94,12 @@ public class ZooKeeperIndex implements IIndex {
 		
         try 
         {
-        	RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-			client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
-			client.start();
+        	if(client == null)
+        	{
+	        	RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+				client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
+				client.start();
+        	}
 
 			for(IndexKey key : storage.getArtifactKeys(type, uploadPath))
 			{

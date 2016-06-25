@@ -1,8 +1,12 @@
 package com.spedge.hangar.storage;
 
+import java.io.IOException;
+
+import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryLanguage;
@@ -13,6 +17,19 @@ import com.spedge.hangar.storage.local.LocalStorageException;
 public abstract class Storage implements IStorage
 {
 	protected final static Logger logger = LoggerFactory.getLogger(Storage.class);
+	
+	@NotEmpty
+	private String path;
+	
+	@JsonProperty
+	public String getPath() {
+		return path;
+	}
+
+	@JsonProperty
+	public void setPath(String path) throws IOException {
+		this.path = path;
+	}
 		
 	@Override
 	public IndexArtifact generateArtifactPath(RepositoryType type, String uploadPath, IndexKey key) throws LocalStorageException 

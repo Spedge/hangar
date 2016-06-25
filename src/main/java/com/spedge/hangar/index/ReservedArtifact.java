@@ -18,4 +18,9 @@ public class ReservedArtifact extends IndexArtifact{
 	protected Map<String, Boolean> getFileTypes() {
 		return files;
 	}
+	
+	public long getTimestamp()
+	{
+		return timestamp;
+	}
 }

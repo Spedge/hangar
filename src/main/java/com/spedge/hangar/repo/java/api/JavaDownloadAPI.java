@@ -1,6 +1,10 @@
 package com.spedge.hangar.repo.java.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
@@ -15,10 +19,11 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.input.TeeInputStream;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.google.common.io.ByteStreams;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
@@ -64,30 +69,41 @@ public class JavaDownloadAPI extends JavaRepository {
 			    		logger.info("[Proxy] Downloading from " + source);
 			    		
 			    		IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
-			    		getIndex().addArtifact(key, ia);
-						getStorage().uploadSnapshotArtifactStream(ia, filename, resp.readEntity(InputStream.class));
+			    		
+			    		// Let's download the item from the proxy and close the connection.
+						ByteArrayOutputStream out = new ByteArrayOutputStream();
+						InputStream in = new TeeInputStream(resp.readEntity(InputStream.class), out);
+						
+						// Now upload the artifact to our proxy location.
+						getStorage().uploadSnapshotArtifactStream(ia, filename, in);
 						resp.close();
-						return getArtifact(key, filename);
+						
+						// We should add it to the index now. Most of these don't have metadata, so we
+						// add it to the index as soon as we get it.
+						getIndex().addArtifact(key, ia);
+						
+						// We take our copy and return it to the user post-upload.
+						final InputStream writer = new ByteArrayInputStream(out.toByteArray());
+						return new StreamingOutput() {
+				            
+				            public void write(OutputStream os) throws IOException, WebApplicationException 
+				            {
+			            		ByteStreams.copy(writer, os);
+			            		writer.close();
+				            }
+				        };
 			    	}
 		    	}
 					
 		    	throw new NotFoundException();	    		
 	    	} 
-	    	catch (StorageException e) 
+	    	catch (StorageException | IndexConfictException | IndexException e) 
 	    	{
 				throw new InternalServerErrorException();
 			}
-	    	catch (IndexException e) 
-	    	{
-	    		throw new InternalServerErrorException();
-			}
-	    	catch(IndexConfictException ice)
-	    	{
-	    		throw new WebApplicationException(Status.CONFLICT);
-	    	}
 	    }
 	}
-
+	
 	public String[] getProxy() {
 		return proxy;
 	}

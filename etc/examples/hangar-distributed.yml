@@ -1,6 +1,7 @@
 storage:
-  store: local
-  path: '<your-path>'
+  store: s3
+  path: '<your-path-within-s3>'
+  bucketName: <your-bucket-name>
 
 artifactIndex:
   index: zookeeper

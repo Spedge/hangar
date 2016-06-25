@@ -19,10 +19,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import com.codahale.metrics.health.HealthCheck;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.io.ByteStreams;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
@@ -36,26 +34,25 @@ public class LocalStorage extends Storage
 {
 	private HealthCheck check = null;
 	
-	@NotEmpty
-	private String path;
-
 	public HealthCheck getHealthcheck() 
 	{
-		if(check == null) { check = new LocalStorageHealthcheck(path); }
+		if(check == null) { check = new LocalStorageHealthcheck(getPath()); }
 		return check;
 	}
-
-	@JsonProperty
-	public String getPath() {
-		return path;
-	}
-
-	@JsonProperty
-	public void setPath(String path) throws IOException {
-		Files.createDirectories(Paths.get(path));
-		this.path = path;
-	}
 	
+	@Override
+	public void initialiseStorage(String uploadPath) throws StorageException {
+		try 
+		{
+			Files.createDirectories(Paths.get(getPath() + "/" + uploadPath));
+		} 
+		catch (IOException e) 
+		{
+			throw new LocalStorageException();
+		}
+		
+	}
+
 	// From the JavaIndexKey (containing GAV params)
 	// generate the path that it should go into on local storage.
 	@Override
@@ -69,7 +66,7 @@ public class LocalStorage extends Storage
 		try
 		{
 			// Need to generate current state - add which files we have
-			Path sourcePath = Paths.get(path, ia.getLocation());
+			Path sourcePath = Paths.get(getPath(), ia.getLocation());
 			
 			Files.walk(Paths.get(sourcePath.toString()))
 			      .filter(Files::isRegularFile)
@@ -95,11 +92,9 @@ public class LocalStorage extends Storage
 	{
 		try 
 		{
-			Path sourcePath = Paths.get(path, uploadPath);
+			Path sourcePath = Paths.get(getPath(), uploadPath);
 			long start = System.currentTimeMillis();
-			
-			System.out.println("Path" + sourcePath.toString());
-			
+						
 			List<IndexKey> paths = Files.walk(Paths.get(sourcePath.toString()))
 								        .filter(Files::isRegularFile)
 								        .map(e -> e.toString().replace(sourcePath.toString(), ""))
@@ -130,15 +125,15 @@ public class LocalStorage extends Storage
 	@Override
 	public StreamingOutput getArtifactStream(final IndexArtifact artifact, final String filename) {
 		
-		final String artifact_path = path + artifact.getLocation() + "/" + filename;
+		final String artifactPath = getPath() + artifact.getLocation() + "/" + filename;
 		
-		if(Files.isReadable(Paths.get(artifact_path)))
+		if(Files.isReadable(Paths.get(artifactPath)))
     	{
 			return new StreamingOutput() {
 	            
 	            public void write(OutputStream os) throws IOException, WebApplicationException 
 	            {
-	            	FileInputStream fis = new FileInputStream(artifact_path);
+	            	FileInputStream fis = new FileInputStream(artifactPath);
             		ByteStreams.copy(fis, os);
             		fis.close();
 	            }
@@ -150,18 +145,20 @@ public class LocalStorage extends Storage
 		}
 	}
 	
+	@Override
 	public void uploadReleaseArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream) throws LocalStorageException {
 		uploadArtifactStream(artifact, filename, uploadedInputStream);
 	}
 
+	@Override
 	public void uploadSnapshotArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream) throws LocalStorageException {
 		uploadArtifactStream(artifact, filename, uploadedInputStream, StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	private void uploadArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream, StandardCopyOption... options) throws LocalStorageException {
 		
-		Path outputPath = FileSystems.getDefault().getPath(path + artifact.getLocation());
-		Path outputPathArtifact = FileSystems.getDefault().getPath(path + artifact.getLocation() + "/" + filename);
+		Path outputPath = FileSystems.getDefault().getPath(getPath() + artifact.getLocation());
+		Path outputPathArtifact = FileSystems.getDefault().getPath(getPath() + artifact.getLocation() + "/" + filename);
 		
 		try 
 		{
@@ -174,17 +171,4 @@ public class LocalStorage extends Storage
 			throw new LocalStorageException();
 		}
 	}
-
-	@Override
-	public void initialiseStoragePath(String uploadPath) throws StorageException {
-		try 
-		{
-			Files.createDirectories(Paths.get(path + "/" + uploadPath));
-		} 
-		catch (IOException e) 
-		{
-			throw new LocalStorageException();
-		}
-		
-	}	
 }

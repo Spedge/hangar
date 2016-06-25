@@ -35,6 +35,7 @@ public class Hangar extends Application<HangarConfiguration> {
 	@Override
 	public void run(HangarConfiguration configuration, Environment environment)	throws Exception 
 	{			
+		// 
 		// When the application starts, we create the repositories we want to manage
 		// from the configuration file that was passed in at startup.
 		List<IRepository> repos = configuration.getRepositories();
