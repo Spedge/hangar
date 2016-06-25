@@ -5,10 +5,19 @@ After many, many years of dealing with expensive, monolithic artifact management
 
 https://xkcd.com/927/
 
+# Architecture
+
+The idea is that this system is as stateless and distributed as possible, so super-fault tolerant. The artifacts are stored in S3 and the index in Zookeeper. Hangar API deals with the RESTful requests from maven/gradle and Hangar-GUI gives you a search/browse functionality feeding from the index.
+
+Below is a typical installation of Hangar...
+
+![Image of Yaktocat](./docs/images/hangar.PNG)
+
 # Features
 
 So far...
 
+* (Java) Allow S3-backed Storage
 * (Java) Create zookeeper-based index
 * (Java) Allow downloading of latest snapshot
 * (Java) Allow upload of releases
@@ -20,7 +29,6 @@ So far...
 
 To go...
 
-* (Java) Allow S3-backed Storage
 * (Java) Retention policies on a repo-by-repo basis.
 
 # Run Me
