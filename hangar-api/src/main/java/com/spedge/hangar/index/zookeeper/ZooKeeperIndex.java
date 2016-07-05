@@ -123,7 +123,7 @@ public class ZooKeeperIndex implements IIndex {
 	}
 
 	@Override
-	public ReservedArtifact addReservationKey(JavaIndexKey key) throws IndexException 
+	public ReservedArtifact addReservationKey(IndexKey key) throws IndexException 
 	{
 		ReservedArtifact reservation = new ReservedArtifact();
 		
@@ -142,7 +142,7 @@ public class ZooKeeperIndex implements IIndex {
 	}
 
 	@Override
-	public void addReservedArtifact(JavaIndexKey key, ReservedArtifact reservation, IndexArtifact artifact)
+	public void addReservedArtifact(IndexKey key, ReservedArtifact reservation, IndexArtifact artifact)
 			throws IndexConfictException, IndexException 
 	{
 		try 

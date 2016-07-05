@@ -9,7 +9,6 @@ import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.index.ReservedArtifact;
 import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
 
@@ -60,7 +59,7 @@ public class InMemoryIndex implements IIndex {
 	}
 
 	@Override
-	public ReservedArtifact addReservationKey(JavaIndexKey key) 
+	public ReservedArtifact addReservationKey(IndexKey key) 
 	{
 		ReservedArtifact reservation = new ReservedArtifact();
 		index.put(key.toString(), reservation);
@@ -68,7 +67,7 @@ public class InMemoryIndex implements IIndex {
 	}
 
 	@Override
-	public void addReservedArtifact(JavaIndexKey key, ReservedArtifact reservation, IndexArtifact ia) throws IndexConfictException 
+	public void addReservedArtifact(IndexKey key, ReservedArtifact reservation, IndexArtifact ia) throws IndexConfictException 
 	{
 		if(index.get(key.toString()).equals(reservation))
 		{

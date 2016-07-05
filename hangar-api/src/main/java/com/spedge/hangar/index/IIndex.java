@@ -35,8 +35,8 @@ public interface IIndex {
 	void load(RepositoryType type, IStorage storage, String uploadPath) throws StorageException, IndexException;
 
 	// This allows a upload to reserve a path before uploading to it.
-	ReservedArtifact addReservationKey(JavaIndexKey key) throws IndexException;
+	ReservedArtifact addReservationKey(IndexKey key) throws IndexException;
 
 	// This allows the update to the reservation to the completed location.
-	void addReservedArtifact(JavaIndexKey key, ReservedArtifact reservation, IndexArtifact ia) throws IndexConfictException, IndexException;
+	void addReservedArtifact(IndexKey key, ReservedArtifact reservation, IndexArtifact ia) throws IndexConfictException, IndexException;
 }
