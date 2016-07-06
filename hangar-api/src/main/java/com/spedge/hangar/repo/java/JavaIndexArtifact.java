@@ -2,6 +2,7 @@ package com.spedge.hangar.repo.java;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.spedge.hangar.index.IndexArtifact;
 
@@ -48,5 +49,22 @@ public class JavaIndexArtifact extends IndexArtifact
 	public void setSnapshotVersion(String snapshotVersion)
 	{
 		this.snapshotVersion = snapshotVersion;
+	}
+	
+	@Override
+	public boolean equals(Object o) 
+	{
+	    // self check
+	    if (this == o) return true;
+	    // null check
+	    if (o == null) return false;
+	    // type check and cast
+	    if (getClass() != o.getClass()) return false;
+	    
+	    JavaIndexArtifact jia = (JavaIndexArtifact) o;
+	    
+	    return Objects.equals(getLocation(), jia.getLocation()) &&
+	    	   Objects.equals(getSnapshotVersion(), jia.getSnapshotVersion()) &&
+	    	   Objects.equals(getFileTypes(), jia.getFileTypes());
 	}
 }

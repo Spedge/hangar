@@ -8,21 +8,17 @@ import org.junit.Test;
 
 import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.ReservedArtifact;
-import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.testutils.IndexUtils;
-import com.spedge.hangar.testutils.TestStorage;
 
 public class TestInMemoryIndex 
 {
 	InMemoryIndex index;
-	IStorage storage;
 	
 	@Before
 	public void setupIndex()
 	{
 		index = new InMemoryIndex();
-		storage = new TestStorage();
 	}
 	
 	@Test

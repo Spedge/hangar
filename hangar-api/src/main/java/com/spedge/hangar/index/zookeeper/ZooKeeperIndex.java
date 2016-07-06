@@ -18,9 +18,17 @@ import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.index.ReservedArtifact;
 import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 
+/**
+ * This is the interface for an index based on Zookeeper. 
+ * 
+ * It relies heavily on the <a href="http://curator.apache.org/">Curator</a> framework
+ * developed by Netflix. 
+ *  
+ * @author Spedge
+ *
+ */
 public class ZooKeeperIndex implements IIndex {
 
 	protected final static Logger logger = LoggerFactory.getLogger(ZooKeeperIndex.class);
@@ -48,32 +56,39 @@ public class ZooKeeperIndex implements IIndex {
 	@Override
 	public void addArtifact(IndexKey key, IndexArtifact artifact) throws IndexException, IndexConfictException 
 	{
-		try
+		String path = convertPath(key);
+		if(isArtifact(key))
 		{
-			String path = convertPath(key);
-			if(isArtifact(key))
+			if(!(getArtifact(key) instanceof ReservedArtifact))
 			{
-				if(!(getArtifact(key) instanceof ReservedArtifact))
+				try
 				{
 					client.setData()
-					      .forPath(path, SerializationUtils.serialize(artifact));
-				}
-				else
+				      	  .forPath(path, SerializationUtils.serialize(artifact));
+				} 
+				catch (Exception e) 
 				{
-					throw new IndexConfictException();
+					throw new IndexException(e);
 				}
 			}
 			else
 			{
-				client.create()
-				  .creatingParentsIfNeeded()
-				  .forPath(path, SerializationUtils.serialize(artifact));
-			}	
-		} 
-		catch (Exception e) 
-		{
-			throw new IndexException(e);
+				throw new IndexConfictException();
+			}
 		}
+		else
+		{
+			try 
+			{
+				client.create()
+				      .creatingParentsIfNeeded()
+				      .forPath(path, SerializationUtils.serialize(artifact));
+			} 
+			catch (Exception e) 
+			{
+				throw new IndexException(e);
+			}
+		}	
 	}
 
 	@Override
@@ -90,17 +105,12 @@ public class ZooKeeperIndex implements IIndex {
 	}
 
 	@Override
-	public void load(RepositoryType type, IStorage storage, String uploadPath) throws IndexException {
+	public void load(RepositoryType type, IStorage storage, String uploadPath) throws IndexException 
+	{
+		startClient(this.connectionString);
 		
         try 
         {
-        	if(client == null)
-        	{
-	        	RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-				client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
-				client.start();
-        	}
-
 			for(IndexKey key : storage.getArtifactKeys(type, uploadPath))
 			{
 				String path = convertPath(key);
@@ -130,8 +140,8 @@ public class ZooKeeperIndex implements IIndex {
 		try 
 		{
 			client.create()
-			  .creatingParentsIfNeeded()
-			  .forPath(convertPath(key), SerializationUtils.serialize(reservation));
+			      .creatingParentsIfNeeded()
+			      .forPath(convertPath(key), SerializationUtils.serialize(reservation));
 		} 
 		catch (Exception e) 
         {
@@ -142,31 +152,38 @@ public class ZooKeeperIndex implements IIndex {
 	}
 
 	@Override
-	public void addReservedArtifact(IndexKey key, ReservedArtifact reservation, IndexArtifact artifact)
-			throws IndexConfictException, IndexException 
+	public void addReservedArtifact(IndexKey key, ReservedArtifact reservation, IndexArtifact artifact)	throws IndexConfictException, IndexException 
 	{
-		try 
+		if(getArtifact(key).equals(reservation))
 		{
-			if(getArtifact(key).equals(reservation))
+			try
 			{
-				client.create()
-				  .creatingParentsIfNeeded()
-				  .forPath(convertPath(key), SerializationUtils.serialize(artifact));
-			}
-			else
+				client.setData()
+				      .forPath(convertPath(key), SerializationUtils.serialize(artifact));				      
+			} 
+			catch (Exception e) 
 			{
-				throw new IndexConfictException();
+				throw new IndexException(e);
 			}
-		} 
-		catch (Exception e) {
-			throw new IndexException(e);
 		}
-		
+		else
+		{
+			throw new IndexConfictException();
+		}
 	}
 	
 	private String convertPath(IndexKey key)
 	{
 		return "/" + key.toString().replace(":", "/");
 	}
-
+		
+	public void startClient(String connectionString)
+	{
+		if(client == null)
+    	{
+        	RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+			client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
+			client.start();
+    	}
+	}
 }
