@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.index.memory.InMemoryIndex;
 import com.spedge.hangar.index.zookeeper.ZooKeeperIndex;
 import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
 

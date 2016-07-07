@@ -1,7 +1,6 @@
 package com.spedge.hangar.repo.java.api;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,9 +19,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.io.input.TeeInputStream;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.amazonaws.util.IOUtils;
 import com.google.common.io.ByteStreams;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
@@ -68,22 +67,27 @@ public class JavaDownloadAPI extends JavaRepository {
 			    	{
 			    		logger.info("[Proxy] Downloading from " + source);
 			    		
-			    		IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
+			    		// We need to load it into memory. We'll look at doing this another way 
+			    		// (perhaps to disk first) but in order to stream it to S3 we need to know
+			    		// the full content length. This might exist in a header or something, 
+			    		// but for now this is how I'm going to do it.
+			    		InputStream in = resp.readEntity(InputStream.class);
 			    		
-			    		// Let's download the item from the proxy and close the connection.
-						ByteArrayOutputStream out = new ByteArrayOutputStream();
-						InputStream in = new TeeInputStream(resp.readEntity(InputStream.class), out);
-						
+			    		byte[] byteArray = IOUtils.toByteArray(in);     
+			    		resp.close();
+			    		
+			    		// Ok now we've downloaded the thing, we'll use it.
+			    		IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
+			    					    		
 						// Now upload the artifact to our proxy location.
-						getStorage().uploadSnapshotArtifactStream(ia, filename, in);
-						resp.close();
+						getStorage().uploadSnapshotArtifactStream(ia, filename, new ByteArrayInputStream(byteArray));
 						
 						// We should add it to the index now. Most of these don't have metadata, so we
 						// add it to the index as soon as we get it.
 						getIndex().addArtifact(key, ia);
 						
 						// We take our copy and return it to the user post-upload.
-						final InputStream writer = new ByteArrayInputStream(out.toByteArray());
+						final InputStream writer = new ByteArrayInputStream(byteArray);
 						return new StreamingOutput() {
 				            
 				            public void write(OutputStream os) throws IOException, WebApplicationException 
@@ -97,7 +101,7 @@ public class JavaDownloadAPI extends JavaRepository {
 					
 		    	throw new NotFoundException();	    		
 	    	} 
-	    	catch (StorageException | IndexConfictException | IndexException e) 
+	    	catch (StorageException | IndexConfictException | IndexException | IOException e) 
 	    	{
 				throw new InternalServerErrorException();
 			}

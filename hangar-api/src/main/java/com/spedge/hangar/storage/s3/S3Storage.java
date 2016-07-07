@@ -103,6 +103,7 @@ public class S3Storage extends Storage
 	public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath) throws StorageException 
 	{
 		List<IndexKey> indices = new ArrayList<IndexKey>();
+		long start = System.currentTimeMillis();
 		
 		for(S3ObjectSummary summary : client.listObjects(bucketName, getPath() + "/" + uploadPath).getObjectSummaries())
 		{
@@ -112,6 +113,9 @@ public class S3Storage extends Storage
 				indices.add(new JavaIndexKey(type, key.substring(0, key.length() - 1)));
 			}
 		}
+		
+		long end = System.currentTimeMillis();
+		logger.info(indices.size() + " Artifacts Indexed under " + getPath() + "/" + uploadPath + " in " + (end - start)  + "ms");
 		
 		return indices;
 	}
