@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.NotFoundException;
@@ -17,6 +19,7 @@ import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -102,18 +105,34 @@ public class S3Storage extends Storage
 	@Override
 	public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath) throws StorageException 
 	{
+		String prefixPath = getPath() + "/" + uploadPath + "/";
 		List<IndexKey> indices = new ArrayList<IndexKey>();
 		long start = System.currentTimeMillis();
 		
-		for(S3ObjectSummary summary : client.listObjects(bucketName, getPath() + "/" + uploadPath).getObjectSummaries())
-		{
-			String key = summary.getKey();
-			if(key.endsWith("/"))
-			{
-				indices.add(new JavaIndexKey(type, key.substring(0, key.length() - 1)));
-			}
-		}
+		ListObjectsV2Request lovr = new ListObjectsV2Request();
+		lovr.setBucketName(bucketName);
+		lovr.setPrefix(prefixPath);
+		lovr.setDelimiter(".pom");
 		
+		for(String prefix : client.listObjectsV2(lovr).getCommonPrefixes())
+		{
+			String[] sections = prefix.substring(prefixPath.length(), prefix.lastIndexOf("/")).split("/");
+			
+			if(sections.length < 3)
+			{
+				logger.info("[ERROR] Broken Artifact (less than 3 parameters) : " + prefix);
+				break;
+			}
+			
+			StringBuilder strBuilder = new StringBuilder();
+			for (int i = 0; i < (sections.length - 2); i++) {
+			   strBuilder.append(sections[i]);
+			   if(i < (sections.length - 3)) { strBuilder.append("."); }
+			}
+							
+			indices.add(new JavaIndexKey(type, strBuilder.toString(), sections[sections.length - 2], sections[sections.length - 1]));
+		}
+				
 		long end = System.currentTimeMillis();
 		logger.info(indices.size() + " Artifacts Indexed under " + getPath() + "/" + uploadPath + " in " + (end - start)  + "ms");
 		

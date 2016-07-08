@@ -68,9 +68,8 @@ public class JavaDownloadAPI extends JavaRepository {
 			    		logger.info("[Proxy] Downloading from " + source);
 			    		
 			    		// We need to load it into memory. We'll look at doing this another way 
-			    		// (perhaps to disk first) but in order to stream it to S3 we need to know
-			    		// the full content length. This might exist in a header or something, 
-			    		// but for now this is how I'm going to do it.
+			    		// (perhaps to disk first) but I'd rather download then upload to S3 and back to the client
+			    		// concurrently. Not sure if this is possible but it'd save a bunch of time.
 			    		InputStream in = resp.readEntity(InputStream.class);
 			    		
 			    		byte[] byteArray = IOUtils.toByteArray(in);     
