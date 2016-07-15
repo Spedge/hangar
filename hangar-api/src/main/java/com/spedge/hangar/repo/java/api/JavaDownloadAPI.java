@@ -37,6 +37,22 @@ public class JavaDownloadAPI extends JavaRepository {
 	private RepositoryType repositoryType = RepositoryType.PROXY_JAVA;
 	private String[] proxy;
 	
+	/*
+	 * This allows us to download the top level metadata - which won't have a version.
+	 * Example Path : /releases/com/spedge/hangar-artifact/maven-metadata.xml
+	 */
+	@GET
+	@Path("/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+	public StreamingOutput getToplevelMetadata(@PathParam("group") String group, 
+					 						   @PathParam("artifact") String artifact,
+											   @PathParam("type") String type)
+	{
+		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
+	    logger.debug("[Downloading Metadata] " + key.toString());
+	    
+		return getArtifact(key, "maven-metadata.xml" + type);
+	}
+	
 	@GET
 	@Path("/{group : .+}/{artifact : .+}/{version : .+}/{filename : [^/]+}")
 	public StreamingOutput getArtifact(@PathParam("group") String group, 

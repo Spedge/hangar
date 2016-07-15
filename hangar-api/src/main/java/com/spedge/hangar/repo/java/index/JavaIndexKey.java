@@ -1,5 +1,7 @@
 package com.spedge.hangar.repo.java.index;
 
+import java.util.Objects;
+
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
 
@@ -47,5 +49,21 @@ public class JavaIndexKey extends IndexKey {
 	public String toString()
 	{
 		return super.toString();
+	}
+	
+	@Override
+	public boolean equals(Object o) 
+	{
+	    // self check
+	    if (this == o) return true;
+	    // null check
+	    if (o == null) return false;
+	    // type check and cast
+	    if (getClass() != o.getClass()) return false;
+	    
+	    JavaIndexKey jik = (JavaIndexKey) o;
+	    
+	    return Objects.equals(toString(), jik.toString()) &&
+	    	   Objects.equals(getType(), jik.getType());
 	}
 }

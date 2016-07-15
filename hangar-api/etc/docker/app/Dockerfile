@@ -6,7 +6,7 @@ MAINTAINER Stuart Davidson <github@spedge.com>
 ADD etc/docker/docker.yml .
 
 # Copy the latest hangar jar. Be sure to have run mvn package first.
-ADD target/hangar.jar ./hangar.jar
+ADD target/hangar-api.jar ./hangar-api.jar
 
 # Need somewhere to keep the data
 VOLUME /data
@@ -15,4 +15,4 @@ VOLUME /data
 EXPOSE 8080
 
 # Kick it off
-ENTRYPOINT ["java", "-jar", "./hangar.jar", "server", "./docker.yml"]
+ENTRYPOINT ["java", "-jar", "./hangar-api.jar", "server", "./docker.yml"]

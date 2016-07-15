@@ -1,15 +1,24 @@
 package com.spedge.hangar.index.zookeeper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.curator.RetryPolicy;
+import org.apache.curator.ensemble.exhibitor.DefaultExhibitorRestClient;
+import org.apache.curator.ensemble.exhibitor.ExhibitorEnsembleProvider;
+import org.apache.curator.ensemble.exhibitor.ExhibitorRestClient;
+import org.apache.curator.ensemble.exhibitor.Exhibitors;
+import org.apache.curator.ensemble.exhibitor.Exhibitors.BackupConnectionStringProvider;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.util.EC2MetadataUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexArtifact;
@@ -36,6 +45,10 @@ public class ZooKeeperIndex implements IIndex {
 	@NotNull
 	@JsonProperty
 	private String connectionString;
+	
+	@NotNull
+	@JsonProperty
+	private String provider = "localhost";
 	
 	private CuratorFramework client;
     
@@ -107,10 +120,10 @@ public class ZooKeeperIndex implements IIndex {
 	@Override
 	public void load(RepositoryType type, IStorage storage, String uploadPath) throws IndexException 
 	{
-		startClient(this.connectionString);
-		
         try 
         {
+        	startClient(this.connectionString);
+        	
 			for(IndexKey key : storage.getArtifactKeys(type, uploadPath))
 			{
 				String path = convertPath(key);
@@ -177,13 +190,44 @@ public class ZooKeeperIndex implements IIndex {
 		return "/" + key.toString().replace(":", "/");
 	}
 		
-	public void startClient(String connectionString)
+	public void startClient(String connectionString) throws Exception
 	{
 		if(client == null)
     	{
-        	RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-			client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
-			client.start();
+			if(provider.equals("aws"))
+			{
+	    		String hostname = EC2MetadataUtils.getPrivateIpAddress();
+	    		
+				BackupConnectionStringProvider bcsp = new BackupConnectionStringProvider() {
+					
+					@Override
+					public String getBackupConnectionString() throws Exception {
+						return hostname + ":2181";
+					}
+				};
+				
+				List<String> hosts = new ArrayList<String>();	
+				hosts.add(hostname);
+				logger.info("[Exhibitor] Attempting to connect to " + hostname + " for system list.");
+				
+				Exhibitors exhibitors = new Exhibitors(hosts, 8181, bcsp);
+				ExhibitorRestClient restClient = new DefaultExhibitorRestClient();
+	        	String restUriPath = "/exhibitor/v1/cluster/list";
+	        	int pollingMs = 1000;
+	        	RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+	        	
+				ExhibitorEnsembleProvider eep = new ExhibitorEnsembleProvider(exhibitors, restClient, restUriPath, pollingMs, retryPolicy);
+				eep.pollForInitialEnsemble();
+	        	
+	        	client = CuratorFrameworkFactory.builder().ensembleProvider(eep).retryPolicy(retryPolicy).build();
+				client.start();
+	        }
+			else
+			{
+	        	RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+				client = CuratorFrameworkFactory.newClient(connectionString, retryPolicy);
+				client.start();
+			}
     	}
 	}
 }

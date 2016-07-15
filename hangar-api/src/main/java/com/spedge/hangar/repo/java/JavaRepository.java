@@ -173,7 +173,6 @@ public abstract class JavaRepository implements IRepository
 		{
 			throw new InternalServerErrorException();
 		} 
-		
 	}
 	
 	/*
