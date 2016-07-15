@@ -13,6 +13,8 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.glassfish.jersey.message.internal.EntityInputStream;
+
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
@@ -39,6 +41,7 @@ import com.spedge.hangar.repo.java.JavaIndexArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.Storage;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.StorageRequest;
 import com.spedge.hangar.storage.local.LocalStorageException;
 
 public class S3Storage extends Storage
@@ -164,33 +167,15 @@ public class S3Storage extends Storage
 	}
 
 	@Override
-	public void uploadReleaseArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException 
+	public void uploadReleaseArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException 
 	{
-		uploadArtifactStream(key, filename, uploadedInputStream);		
+		uploadArtifactStream(key, sr);		
 	}
 
 	@Override
-	public void uploadSnapshotArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException 
+	public void uploadSnapshotArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException 
 	{
-		uploadArtifactStream(key, filename, uploadedInputStream);		
-	}
-		
-	private void uploadArtifactStream(IndexArtifact artifact, String filename, InputStream uploadedInputStream) throws LocalStorageException 
-	{
-		try 
-		{
-			TransferManager tx = new TransferManager(client);
-			ObjectMetadata om = new ObjectMetadata();
-			om.setContentLength(uploadedInputStream.available());
-						
-			Upload myUpload = tx.upload(bucketName, getPath() + artifact.getLocation() + "/" + filename, uploadedInputStream, om); 
-			myUpload.waitForCompletion();
-		} 
-		catch (Exception e) 
-		{
-			logger.error(e.getLocalizedMessage());
-			throw new LocalStorageException();
-		}
+		uploadArtifactStream(key, sr);		
 	}
 
 	@Override
@@ -202,5 +187,25 @@ public class S3Storage extends Storage
 		ia.setLocation(location);
 		
 		return ia;
+	}
+
+	private void uploadArtifactStream(IndexArtifact ia, StorageRequest sr) throws LocalStorageException 
+	{
+		try 
+		{
+			TransferManager tx = new TransferManager(client);
+			ObjectMetadata om = new ObjectMetadata();
+
+			om.setContentLength(sr.getLength());
+						
+			Upload myUpload = tx.upload(bucketName, getPath() + ia.getLocation() + "/" + sr.getFilename(), sr.getStream(), om); 
+			myUpload.waitForCompletion();
+		} 
+		catch (Exception e) 
+		{
+			logger.error(e.getLocalizedMessage());
+			throw new LocalStorageException();
+		}
+		
 	}
 }

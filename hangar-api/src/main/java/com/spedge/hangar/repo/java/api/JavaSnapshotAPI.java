@@ -2,11 +2,13 @@ package com.spedge.hangar.repo.java.api;
 
 import java.io.InputStream;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -14,6 +16,7 @@ import javax.ws.rs.core.StreamingOutput;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaSnapshotRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.StorageRequest;
 
 public class JavaSnapshotAPI extends JavaSnapshotRepository
 {
@@ -35,7 +38,8 @@ public class JavaSnapshotAPI extends JavaSnapshotRepository
 	@PUT
 	@Consumes(MediaType.WILDCARD)
 	@Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
-	public Response uploadArtifact(@PathParam("group") String group, 
+	public Response uploadArtifact(@Context final HttpServletRequest request,
+			                       @PathParam("group") String group, 
 								   @PathParam("artifact") String artifact,
 					               @PathParam("version") String version,
 					               @PathParam("filename") String filename,
@@ -44,7 +48,12 @@ public class JavaSnapshotAPI extends JavaSnapshotRepository
 		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
 		logger.debug("[Uploading Snapshot] " + key.toString());
 		
-		return addArtifact(key, filename, uploadedInputStream);
+		StorageRequest sr = new StorageRequest();
+		sr.setFilename(filename);
+		sr.setLength(request.getContentLength());
+		sr.setStream(uploadedInputStream);
+		
+		return addArtifact(key, sr);
 	}
 	
 	/*
@@ -66,7 +75,8 @@ public class JavaSnapshotAPI extends JavaSnapshotRepository
 	@PUT
 	@Consumes(MediaType.WILDCARD)
 	@Path("/snapshots/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-	public Response uploadTopLevelMetadata(@PathParam("group") String group, 
+	public Response uploadTopLevelMetadata(@Context final HttpServletRequest request,
+			                               @PathParam("group") String group, 
 										   @PathParam("artifact") String artifact,
 										   @PathParam("type") String type,
 					                       InputStream uploadedInputStream)
@@ -74,13 +84,19 @@ public class JavaSnapshotAPI extends JavaSnapshotRepository
 		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
 		logger.debug("[Uploading Metadata] " + key.toString());
 		
+		StorageRequest sr = new StorageRequest();
+		sr.setLength(request.getContentLength());
+		sr.setStream(uploadedInputStream);
+		
 		if(! type.isEmpty())
 		{
-			return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
+			sr.setFilename("maven-metadata.xml" + type);
+			return addArtifact(key, sr);
 		}
 		else
 		{
-			return addMetadata(key, uploadedInputStream);
+			sr.setFilename("maven-metadata.xml");
+			return addMetadata(key, sr);
 		}
 	}
 
@@ -104,22 +120,29 @@ public class JavaSnapshotAPI extends JavaSnapshotRepository
 	@PUT
 	@Consumes(MediaType.WILDCARD)
 	@Path("/snapshots/{group : .+}/{artifact : .+}/{version : ([\\d\\.]*\\-SNAPSHOT)+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-	public Response uploadMetadata(@PathParam("group") String group, 
-									@PathParam("artifact") String artifact,
-									@PathParam("version") String version,
-									@PathParam("type") String type,
-					                InputStream uploadedInputStream)
+	public Response uploadMetadata(@Context final HttpServletRequest request,
+			                       @PathParam("group") String group, 
+								   @PathParam("artifact") String artifact,
+								   @PathParam("version") String version,
+								   @PathParam("type") String type,
+					               InputStream uploadedInputStream)
 	{
 		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
 		logger.debug("[Uploading Metadata] " + key.toString());
 		
+		StorageRequest sr = new StorageRequest();
+		sr.setLength(request.getContentLength());
+		sr.setStream(uploadedInputStream);
+		
 		if(! type.isEmpty())
 		{
-			return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
+			sr.setFilename("maven-metadata.xml" + type);
+			return addArtifact(key, sr);
 		}
 		else
 		{
-			return addSnapshotMetadata(key, uploadedInputStream);
+			sr.setFilename("maven-metadata.xml");
+			return addSnapshotMetadata(key, sr);
 		}
 	}
 	

@@ -30,6 +30,7 @@ import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.StorageRequest;
 
 public class JavaDownloadAPI extends JavaRepository {
 
@@ -79,7 +80,12 @@ public class JavaDownloadAPI extends JavaRepository {
 			    		IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
 			    					    		
 						// Now upload the artifact to our proxy location.
-						getStorage().uploadSnapshotArtifactStream(ia, filename, new ByteArrayInputStream(byteArray));
+			    		StorageRequest sr = new StorageRequest();
+			    		sr.setFilename(filename);
+			    		sr.setStream(new ByteArrayInputStream(byteArray));
+			    		sr.setLength(resp.getLength());
+			    		
+						getStorage().uploadSnapshotArtifactStream(ia, sr);
 						
 						// We should add it to the index now. Most of these don't have metadata, so we
 						// add it to the index as soon as we get it.

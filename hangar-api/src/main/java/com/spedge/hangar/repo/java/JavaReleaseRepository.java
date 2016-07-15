@@ -16,20 +16,21 @@ import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.repo.java.metadata.JavaMetadata;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.StorageRequest;
 
 public abstract class JavaReleaseRepository extends JavaRepository 
 {	
-	protected Response addReleaseMetadata(JavaIndexKey key, InputStream uploadedInputStream)
+	protected Response addReleaseMetadata(JavaIndexKey key, StorageRequest sr)
 	{
 		try 
 		{			
 			// We need two copies for this to work - we can't just use the request stream twice
 			// as you can't seem to reset it (makes sense)
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			InputStream in = new TeeInputStream(uploadedInputStream, out);
+			InputStream in = new TeeInputStream(sr.getStream(), out);
 			
 			// Use the input to write it to disk
-			addArtifactToStorage(key, "maven-metadata.xml", in);
+			addArtifactToStorage(key, StorageRequest.create(sr.getFilename(), in, sr.getLength()));
 			closeAllStreams(in);
 			
 			// Now we need to marshal the XML and determine the current snapshot version.
@@ -44,7 +45,8 @@ public abstract class JavaReleaseRepository extends JavaRepository
 		    
 			getIndex().addArtifact(releaseKey, releaseIa);
 			
-			closeAllStreams(uploadedInputStream, in);
+			sr.closeStream();
+			closeAllStreams(in);
 			return Response.ok().build();
 		}
 		catch(IndexException ie)

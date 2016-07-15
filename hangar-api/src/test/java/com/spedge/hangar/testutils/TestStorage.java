@@ -1,7 +1,6 @@
 package com.spedge.hangar.testutils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +18,7 @@ import com.spedge.hangar.repo.java.JavaIndexArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.StorageRequest;
 
 public class TestStorage implements IStorage 
 {
@@ -43,12 +43,12 @@ public class TestStorage implements IStorage
 		return new FakeStreamingOutput(fakeStorage.get(key.getLocation()));
 	}
 
-	public void uploadReleaseArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException {
-		fakeStorage.put(key.getLocation(), filename);
+	public void uploadReleaseArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException {
+		fakeStorage.put(key.getLocation(), sr.getFilename());
 	}
 
-	public void uploadSnapshotArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException {
-		fakeStorage.put(key.getLocation(), filename);
+	public void uploadSnapshotArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException {
+		fakeStorage.put(key.getLocation(), sr.getFilename());
 	}
 	
 	public class FakeStreamingOutput implements StreamingOutput

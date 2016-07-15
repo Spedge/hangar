@@ -1,6 +1,5 @@
 package com.spedge.hangar.storage;
 
-import java.io.InputStream;
 import java.util.List;
 
 import javax.ws.rs.core.StreamingOutput;
@@ -27,8 +26,8 @@ public interface IStorage {
 	IndexArtifact generateArtifactPath(RepositoryType type, String uploadPath, IndexKey key) throws StorageException;
 	
 	StreamingOutput getArtifactStream(IndexArtifact key, String filename);
-	void uploadReleaseArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException;
-	void uploadSnapshotArtifactStream(IndexArtifact key, String filename, InputStream uploadedInputStream) throws StorageException;
+	void uploadReleaseArtifactStream(IndexArtifact ia, StorageRequest sr) throws StorageException;
+	void uploadSnapshotArtifactStream(IndexArtifact ia, StorageRequest sr) throws StorageException;
 	
 	void initialiseStorage(String uploadPath) throws StorageException;
 }

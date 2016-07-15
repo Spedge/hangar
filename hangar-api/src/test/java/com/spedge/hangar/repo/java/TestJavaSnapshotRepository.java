@@ -9,10 +9,12 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.input.ReaderInputStream;
+import org.easymock.EasyMock;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,6 +30,7 @@ import com.spedge.hangar.repo.java.api.JavaSnapshotAPI;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.StorageRequest;
 import com.spedge.hangar.testutils.TestStorage;
 import com.spedge.hangar.testutils.TestStorage.FakeStreamingOutput;
 
@@ -72,8 +75,7 @@ public class TestJavaSnapshotRepository {
 		IndexArtifact ia = storage.generateArtifactPath(key);
 		index.addArtifact(key, ia);
 		
-		InputStream uploadedInputStream = null;
-		storage.uploadSnapshotArtifactStream(ia, filename, uploadedInputStream);
+		storage.uploadSnapshotArtifactStream(ia, StorageRequest.create(filename, null, 0));
 		
 		// See what happens!
 		FakeStreamingOutput fso = (FakeStreamingOutput) jsr.getSnapshotArtifact(webgroup, artifact, version, filename);
@@ -93,7 +95,8 @@ public class TestJavaSnapshotRepository {
 		InputStream uploadedInputStream = new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
 		
 		// Upload it to the system
-		Response rep = jsr.uploadArtifact(webgroup, artifact, version, filename, uploadedInputStream);
+		HttpServletRequest req = EasyMock.createMock(HttpServletRequest.class);
+		Response rep = jsr.uploadArtifact(req, webgroup, artifact, version, filename, uploadedInputStream);
 		assertEquals(rep.getStatus(), HttpStatus.OK_200);
 			
 		// Begin the registration of a new artifact.
@@ -102,8 +105,10 @@ public class TestJavaSnapshotRepository {
 		uploadedInputStream = new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
 		
 		// Upload it to the system
-		rep = jsr.uploadArtifact(webgroup, artifact, version, filename, uploadedInputStream);
+		HttpServletRequest resp = EasyMock.createMock(HttpServletRequest.class);
+		rep = jsr.uploadArtifact(resp, webgroup, artifact, version, filename, uploadedInputStream);
 		assertEquals(rep.getStatus(), HttpStatus.OK_200);
+		uploadedInputStream.close();
 		
 		// This should fail as we've not uploaded the metadata at this point.
 		try
@@ -118,6 +123,7 @@ public class TestJavaSnapshotRepository {
 		
 		StringReader reader = new StringReader(metadata);
 		uploadedInputStream = new ReaderInputStream(reader);
+		uploadedInputStream.close();
 		
 		// TODO : I don't know why streams don't work in a test, but they do IRL.
 		// Will investigate.

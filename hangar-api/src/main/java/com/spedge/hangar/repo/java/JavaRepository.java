@@ -30,6 +30,7 @@ import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.StorageRequest;
 
 import io.dropwizard.setup.Environment;
 
@@ -121,11 +122,11 @@ public abstract class JavaRepository implements IRepository
 		}
 	}	
 	
-	protected Response addMetadata(JavaIndexKey key, InputStream in)
+	protected Response addMetadata(JavaIndexKey key, StorageRequest sr)
 	{
 		// Use the input to write it to disk
-		IndexArtifact ia = addArtifactToStorage(key, "maven-metadata.xml", in);
-		closeAllStreams(in);
+		IndexArtifact ia = addArtifactToStorage(key, sr);
+		sr.closeStream();
 		
 		try
 		{
@@ -142,20 +143,20 @@ public abstract class JavaRepository implements IRepository
 		} 
 		return Response.ok().build();
 	}
-	
-	protected Response addArtifact(JavaIndexKey key, String filename, InputStream uploadedInputStream)
+		
+	protected Response addArtifact(JavaIndexKey key, StorageRequest sr) 
 	{
 		// If we simply have an artifact to add that has no effect on the index, go ahead and get it done.
-		addArtifactToStorage(key, filename, uploadedInputStream);
-		closeAllStreams(uploadedInputStream);
+		addArtifactToStorage(key, sr);
+		sr.closeStream();
+		
 		return Response.ok().build();
 	}
 	
 	/*
 	 * This concentrates on actually getting the artifact into storage. Saves duplication of code.
 	 */
-	protected IndexArtifact addArtifactToStorage(JavaIndexKey key, String filename, InputStream uploadedInputStream)
-	{
+	protected IndexArtifact addArtifactToStorage(JavaIndexKey key, StorageRequest sr) {
 		// Artifacts are uploaded, but for them to become live they need metadata uploaded.
 		// All this does is save it successfully.
 		try 
@@ -164,7 +165,7 @@ public abstract class JavaRepository implements IRepository
 			IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
 			
 			// Upload the file we need.
-			getStorage().uploadSnapshotArtifactStream(ia, filename, uploadedInputStream);
+			getStorage().uploadSnapshotArtifactStream(ia, sr);
 
 			return ia;
 		} 
@@ -172,6 +173,7 @@ public abstract class JavaRepository implements IRepository
 		{
 			throw new InternalServerErrorException();
 		} 
+		
 	}
 	
 	/*

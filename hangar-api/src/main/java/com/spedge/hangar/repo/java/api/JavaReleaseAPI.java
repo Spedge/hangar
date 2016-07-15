@@ -2,6 +2,7 @@ package com.spedge.hangar.repo.java.api;
 
 import java.io.InputStream;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
@@ -9,6 +10,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -18,6 +20,7 @@ import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaReleaseRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.StorageRequest;
 
 public class JavaReleaseAPI extends JavaReleaseRepository
 {
@@ -39,7 +42,8 @@ public class JavaReleaseAPI extends JavaReleaseRepository
 	@PUT
 	@Consumes(MediaType.WILDCARD)
 	@Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+}/{filename : [^/]+}")
-	public Response uploadArtifact(@PathParam("group") String group, 
+	public Response uploadArtifact(@Context final HttpServletRequest request,
+			                       @PathParam("group") String group, 
 								   @PathParam("artifact") String artifact,
 					               @PathParam("version") String version,
 					               @PathParam("filename") String filename,
@@ -63,7 +67,7 @@ public class JavaReleaseAPI extends JavaReleaseRepository
 			throw new InternalServerErrorException();
 		}
 	    	
-		return addArtifact(key, filename, uploadedInputStream);
+		return addArtifact(key, StorageRequest.create(filename, uploadedInputStream, request.getContentLength()));
 	}
 		
 	/*
@@ -85,7 +89,8 @@ public class JavaReleaseAPI extends JavaReleaseRepository
 	@PUT
 	@Consumes(MediaType.WILDCARD)
 	@Path("/releases/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-	public Response uploadTopLevelMetadata(@PathParam("group") String group, 
+	public Response uploadTopLevelMetadata(@Context final HttpServletRequest request,
+			                               @PathParam("group") String group, 
 										   @PathParam("artifact") String artifact,
 										   @PathParam("type") String type,
 					                       InputStream uploadedInputStream)
@@ -93,13 +98,19 @@ public class JavaReleaseAPI extends JavaReleaseRepository
 		JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
 		logger.debug("[Uploading Metadata] " + key.toString());
 		
+		StorageRequest sr = new StorageRequest();
+		sr.setLength(request.getContentLength());
+		sr.setStream(uploadedInputStream);
+		
 		if(! type.isEmpty())
 		{
-			return addArtifact(key, "maven-metadata.xml" + type, uploadedInputStream);
+			sr.setFilename("maven-metadata.xml" + type);
+			return addArtifact(key, sr);
 		}
 		else
 		{
-			return addReleaseMetadata(key, uploadedInputStream);
+			sr.setFilename("maven-metadata.xml");
+			return addReleaseMetadata(key, sr);
 		}
 	}
 	
