@@ -1,6 +1,48 @@
+sudo: required
+
+services:
+  - docker
+
 language: java
 
 jdk:
   - oraclejdk8
   
 before_install: cd hangar-api
+
+after_success:
+  - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+  - export REPO=spedge/hangar-api
+  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+  - docker build -f ./hangar-api/etc/docker/Dockerfile -t $REPO:$COMMIT ./hangar-api
+  - docker tag $REPO:$COMMIT $REPO:$TAG
+  - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+  - docker push $REPO
+
+env:
+  global:
+    -   secure: "nYqD/m21mKcOT7kJhpJMO9wqYq348ElXEcfaDgDtxsuoskqJtIXE+0PC4uJBWPt9bMER3DvpX8MHLiIHW+wGxb5jn
+fzg1E8HqBwOT/c4C3A0inZ0INk/tdWF7ebmnW+de4PVd3WObGw3Po2Agors1R/ieZGCob4699zUows4GmpT0r5hNZxgHB3LGISGX
+QksGW/ak9/UN8qFM3CAEzsaoQucdNSDvE8TqcpTcap5lwXCSSniciKlMaJvK1je3gjdNkXsTJrQwnCjWxZ0Vzhb0zsS3Eg7oSg3I
+v7BivPXrAXxDaSbB6/FDGbsgBWWxA/d9INwmFrhRsqPDON0qs6SMb/sznAerswci1b8Oat97a1ZT4SLUMwwwt773S22yvShqXd9T
+B7cZZB16Iqxh8h1mftR15tGVVDroTI7Y7vs3cIHO+tEF0JOsY+ydYQ+NjEpce11qTuoSiCwkmEs3eCEMmrFutTuT7yQlPfTf5nUJ
+wmGfmxHiRvjw7Ekgpzf1FU+dROWJCg80YWPgnksch5ifchpVe4oe4dXFF/Sqphgk/CRFrYM0MRBgI+ohBf7toAXDKoyBfp3e1q9D
+jZ75xVIbSGWVWP0q223puW3QBk5BFJXmDfDsks7iyhUXJ/EDTMugFbUc41VD5oJKi93V6e48vB7Ecx0nF/EJ0UFI7CAQOY=" #DOCKER_EMAIL
+
+    - secure: "SSK++rUsWdyeICamizggLBphZw//DhhaxRdCSKQUXe59hlrc5vlk0/ugFOFDM3hXPCCJfkl9Gfg9HOIwxVLVfTHnF
+DP1pVmFkFhIeDpfnmEpG7RRIcIthjL+UzzrKhB7aGd/azre7iPr1hWJrYCU2swOLJ698jDiTrpsjvLNVkpNOtD1S29QA3ySFFrlX
+6wADuPB0pmMJvF4pB4G6lwQFcjJGCOo9tEG1J0xEatL0ji0pBF1KnpJ9IPgWfz8kmhxMA7bm0StNujC1wX9GDxpc3ka2cR+osnpV
+ZvLUnEkhz5iuMVsJMGgB4FOw8jP11y6NyAlAYK0Z8BXRmXQGuYFgyK4tiiBv2FePAb1GFVIxddN/ICnVI+flFrscHh49/EFRZ6d7
+4S9Kiozsy6B4MnSDbwliEhDRcPvKSwk2VqxLus6BPFt+2ZmvyEXERegLa/0/+NfinSdI3l8iTqRUYiS0TUYGBMD4mdTo6aQsukMZ
+SckHC7eK5cbkKSJZb7xeSV/k8pRxvK4PEy65j6559ZfUz8VyREEa3kaEL2zy5TZfUMQs1A6fwkz7S91WEMYTdftWA3wws4cq4UQE
+h/aONCxmVC2d2+w5dD/CZK7sjbuA1SLYKfgJ/npA8+ILsd/d+KGG8FrWrWV8Flk8EoCdGN/TeBPolA0o5xXtanNl997NnM=" # DOCKER_USER
+
+    - secure: "PKCL+3xPAcuyT8P+9WmVMOQW6uImhl+TLQOKNDNxYv1kKCYA2r3JJTeFmNR6iCYX5cJPPfY/vMbAqLDeA63tER/s3
+uHBBaANU08kIs5R95bSVSkFS1T9wpB/zgyz/YqNlIByD0Q5e8CQYs0yAx6dqQaIgPL2qQUOq1UKc9pS9bT4hj1QbpxEbcgDGLWdE
+9MN5oWk20ahKQqzdpvaQUixbzqFGYuQbGwNOkHDxN0GytCjIffCAFYNn9h+DG/lvWHIhn0RfAevi3HdneBUNDoGTUL3zWKub+FKW
+U5dJapl09qC4t1hcvO3usFyDCB92509nyb/WsbZn2tojidhhR4CW3wRqzQYdvzsWBc9f3GlmE9TKaEzHAJWOkN6/qq9nQRdfnSrd
+itK/DlSR8qbHuwejz4IXdxjOCW2ABRn1kyjHoZ+NDFqduQGnDYVO5nNnfKhxkdO/TZ0q/Y1a/M4yhqcwtbx0lek1Oc5N6W/hP8Ri
+W9qo8ti8PJrPmVAjTWHOME2RwokXOJfv6SRpVHl0Ju18yhBKvhgb4Kijl6AfRKrJYZ5cEKqTE3DzIGJyvTkvbhnZYx4vJrANc/zB
+Eg7YsIa8FCN81trCmohXA/Kz9mc9AYfitrJtNnIA6/ZUPMe9MCgFF67eIyL1ER3nqhem4UWrpWpUzIbr7xYESw0I+yz7vo=" # DOCKER_PASS
+	
+    - COMMIT=${TRAVIS_COMMIT::8}

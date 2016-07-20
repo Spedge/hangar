@@ -3,8 +3,7 @@ storage:
   path: '/data'
 
 artifactIndex:
-  index: zookeeper
-  connectionString: '192.168.99.100:2181'
+  index: in-memory
   
 repositories:
 - id: snapshot
