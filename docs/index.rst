@@ -5,7 +5,10 @@ Welcome to Hangar!
 
 Hangar is an open-source, distributed, container-based artifact management system. 
 
-.. contents:: 
+.. toctree::
+  :maxdepth: 2
+   
 
-about
-users/
+  users/index
+  install/index
+  about

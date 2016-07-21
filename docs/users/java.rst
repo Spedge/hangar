@@ -1,10 +1,13 @@
 User Guide - Java
-=================
+==================
 
-Starting to use Hangar as your dependency management system is simple. 
+Starting to use Hangar as your Artifact Store is simple.
 
-To Download
------------
+
+ 
+
+Maven - Download
+----------------
 
 To use Hangar as your main repository, add the following directive to your *settings.xml*
 
@@ -20,8 +23,8 @@ To use Hangar as your main repository, add the following directive to your *sett
   
 where *<your-hangar-url>* is the URL given to you by your friendly system administrator for where it's running. Simples!
 
-To Upload
----------
+Maven - Upload
+--------------
 
 Obviously, you've written something incredible and you want to push your new artifact back into Hangar. Add the following directive into your *pom.xml*
 

@@ -5,6 +5,10 @@ Each team, squad, mob will have a different way of wanting to approach artifact 
 
 With this ethos in mind, there are a variety of ways of running Hangar. 
 
+* Dirty Hack
+
+You want to just give it a go? See if it works with what you want to do? Run it in a container and have it disappear once you are done!
+
 * All Local
 
 In this format, we have a single instance with local storage for artifacts and an in-memory index. Handy for debugging or just giving it a try.
