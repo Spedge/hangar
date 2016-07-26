@@ -5,9 +5,10 @@ ENV \
     MAVEN_HOME="/usr/share/maven" \
     JAVA_HOME="/usr/lib/jvm/default-jvm" \
     JAVA_PREFS="/.java/.userPrefs" \
-    BUILD_DEPS="curl openjdk8 bash"
+    BUILD_DEPS="curl openjdk8 bash git"
 
 ENV PATH=${JAVA_HOME}/bin:${PATH}
+RUN mkdir -p -m 777 /opt/test
 
 RUN \
     # Install Java8
@@ -17,25 +18,37 @@ RUN \
     && grep '^networkaddress.cache.ttl=' ${JAVA_HOME}/jre/lib/security/java.security || echo 'networkaddress.cache.ttl=60' >> ${JAVA_HOME}/jre/lib/security/java.security \
 
     # Cleanup
-    && rm -rf -- /var/cache/apk/* \
+    && rm -rf -- /var/cache/apk/*
 
+RUN \
     # Install Maven
-    && MAVEN_VERSION=3.3.3 \
+    MAVEN_VERSION=3.3.3 \
     && cd /usr/share \
     && wget -q http://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -O - | tar xzf - \
     && mv /usr/share/apache-maven-${MAVEN_VERSION} /usr/share/maven \
-    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn 
 
+RUN \	
+	# Install Bats
+	git clone https://github.com/sstephenson/bats.git \
+	&& cd bats \
+	&& ./install.sh /opt/test/bats \
+	&& ln -s /opt/test/bats/bin/bats /usr/bin/bats
+	
+	
+#RUN \
+    # Install any tools to run bats tests
+#	apk add --update "wc"
+	
 # To store Java preferences
 RUN mkdir -p ${JAVA_PREFS}
 RUN chown -R nobody.nobody ${JAVA_PREFS}
 
 # To set-up test
-RUN mkdir -p -m 777 /opt/test
-RUN chmod 777 /opt/test
 ADD include /opt/test/
+RUN chmod -R 777 /opt/test
 
 USER nobody
 WORKDIR /opt/test
 
-ENTRYPOINT ["bash", "-ex", "/opt/test/test.sh"]
+ENTRYPOINT ["bash", "/opt/test/test.sh"]

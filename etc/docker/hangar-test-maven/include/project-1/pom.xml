@@ -6,13 +6,13 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<dropwizard.version>0.0.20</dropwizard.version>
+		<dropwizard.version>0.9.2</dropwizard.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
-			<groupId>com.spedge</groupId>
-			<artifactId>hangar-artifact</artifactId>
+			<groupId>io.dropwizard</groupId>
+			<artifactId>dropwizard-core</artifactId>
 			<version>${dropwizard.version}</version>
 		</dependency>
 	</dependencies>
@@ -20,11 +20,11 @@
 	<distributionManagement>
 	   <snapshotRepository>
 	      <id>hangar-snapshots</id>
-	      <url>http://{env.HANGAR_URL}/java/snapshots</url>
+	      <url>http://${env.HANGAR_URL}/java/snapshots</url>
 	   </snapshotRepository>
 	   <repository>
 	      <id>hangar-snapshots</id>
-	      <url>http://{env.HANGAR_URL}/java/releases</url>
+	      <url>http://${env.HANGAR_URL}/java/releases</url>
 	   </repository>
 	</distributionManagement>
 </project>
