@@ -40,18 +40,18 @@ You can run a very basic instance of Hangar by simply pulling the container from
 
 You should see the following...
 
-$ docker run --rm -p 8080:8080 spedge/hangar-api
-INFO  [2016-07-20 18:12:44,379] org.eclipse.jetty.util.log: Logging initialized @1374ms
-INFO  [2016-07-20 18:12:44,613] com.spedge.hangar.storage.Storage: 0 Artifacts Indexed under /data/java-snapshots in 97ms
-INFO  [2016-07-20 18:12:44,617] com.spedge.hangar.storage.Storage: 0 Artifacts Indexed under /data/java-releases in 0ms
-INFO  [2016-07-20 18:12:44,623] com.spedge.hangar.storage.Storage: 0 Artifacts Indexed under /data/java-proxy in 1ms
-INFO  [2016-07-20 18:12:44,625] io.dropwizard.server.ServerFactory: Starting hangar
-INFO  [2016-07-20 18:12:44,633] io.dropwizard.server.DefaultServerFactory: Registering jersey handler with root path prefix: /
-INFO  [2016-07-20 18:12:44,654] io.dropwizard.server.DefaultServerFactory: Registering admin handler with root path prefix: /
-INFO  [2016-07-20 18:12:44,719] org.eclipse.jetty.setuid.SetUIDListener: Opened application@338494fa{HTTP/1.1}{0.0.0.0:8080}
-INFO  [2016-07-20 18:12:44,733] org.eclipse.jetty.setuid.SetUIDListener: Opened admin@505a9d7c{HTTP/1.1}{0.0.0.0:8081}
-INFO  [2016-07-20 18:12:44,735] org.eclipse.jetty.server.Server: jetty-9.2.z-SNAPSHOT
-INFO  [2016-07-20 18:12:45,590] io.dropwizard.jersey.DropwizardResourceConfig: The following paths were found for the configured resources:
+    $ docker run --rm -p 8080:8080 spedge/hangar-api
+    INFO  [2016-07-20 18:12:44,379] org.eclipse.jetty.util.log: Logging initialized @1374ms
+    INFO  [2016-07-20 18:12:44,613] com.spedge.hangar.storage.Storage: 0 Artifacts Indexed under /data/java-snapshots in 97ms
+    INFO  [2016-07-20 18:12:44,617] com.spedge.hangar.storage.Storage: 0 Artifacts Indexed under /data/java-releases in 0ms
+    INFO  [2016-07-20 18:12:44,623] com.spedge.hangar.storage.Storage: 0 Artifacts Indexed under /data/java-proxy in 1ms
+    INFO  [2016-07-20 18:12:44,625] io.dropwizard.server.ServerFactory: Starting hangar
+    INFO  [2016-07-20 18:12:44,633] io.dropwizard.server.DefaultServerFactory: Registering jersey handler with root path prefix: /
+    INFO  [2016-07-20 18:12:44,654] io.dropwizard.server.DefaultServerFactory: Registering admin handler with root path prefix: /
+    INFO  [2016-07-20 18:12:44,719] org.eclipse.jetty.setuid.SetUIDListener: Opened application@338494fa{HTTP/1.1}{0.0.0.0:8080}
+    INFO  [2016-07-20 18:12:44,733] org.eclipse.jetty.setuid.SetUIDListener: Opened admin@505a9d7c{HTTP/1.1}{0.0.0.0:8081}
+    INFO  [2016-07-20 18:12:44,735] org.eclipse.jetty.server.Server: jetty-9.2.z-SNAPSHOT
+    INFO  [2016-07-20 18:12:45,590] io.dropwizard.jersey.DropwizardResourceConfig: The following paths were found for the configured resources:
 
     GET     /java/releases/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\.)?(\w)*} (com.spedge.hangar.repo.java.api.JavaReleaseAPI)
     PUT     /java/releases/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\.)?(\w)*} (com.spedge.hangar.repo.java.api.JavaReleaseAPI)
@@ -67,13 +67,13 @@ INFO  [2016-07-20 18:12:45,590] io.dropwizard.jersey.DropwizardResourceConfig: T
     GET     /java/{group : .+}/{artifact : .+}/{version : .+}/{filename : [^/]+} (com.spedge.hangar.repo.java.api.JavaDownloadAPI)
     PUT     /test/headers (com.spedge.hangar.requests.TestRequest)
 
-INFO  [2016-07-20 18:12:45,604] org.eclipse.jetty.server.handler.ContextHandler: Started i.d.j.MutableServletContextHandler@60e5272{/,null,AVAILABLE}
-INFO  [2016-07-20 18:12:45,615] io.dropwizard.setup.AdminEnvironment: tasks =
+    INFO  [2016-07-20 18:12:45,604] org.eclipse.jetty.server.handler.ContextHandler: Started i.d.j.MutableServletContextHandler@60e5272{/,null,AVAILABLE}
+    INFO  [2016-07-20 18:12:45,615] io.dropwizard.setup.AdminEnvironment: tasks =
 
     POST    /tasks/log-level (io.dropwizard.servlets.tasks.LogConfigurationTask)
     POST    /tasks/gc (io.dropwizard.servlets.tasks.GarbageCollectionTask)
 
-INFO  [2016-07-20 18:12:45,622] org.eclipse.jetty.server.handler.ContextHandler: Started i.d.j.MutableServletContextHandler@47d7bfb3{/,null,AVAILABLE}
-INFO  [2016-07-20 18:12:45,635] org.eclipse.jetty.server.ServerConnector: Started application@338494fa{HTTP/1.1}{0.0.0.0:8080}
-INFO  [2016-07-20 18:12:45,636] org.eclipse.jetty.server.ServerConnector: Started admin@505a9d7c{HTTP/1.1}{0.0.0.0:8081}
-INFO  [2016-07-20 18:12:45,637] org.eclipse.jetty.server.Server: Started @2632ms
+    INFO  [2016-07-20 18:12:45,622] org.eclipse.jetty.server.handler.ContextHandler: Started i.d.j.MutableServletContextHandler@47d7bfb3{/,null,AVAILABLE}
+    INFO  [2016-07-20 18:12:45,635] org.eclipse.jetty.server.ServerConnector: Started application@338494fa{HTTP/1.1}{0.0.0.0:8080}
+    INFO  [2016-07-20 18:12:45,636] org.eclipse.jetty.server.ServerConnector: Started admin@505a9d7c{HTTP/1.1}{0.0.0.0:8081}
+    INFO  [2016-07-20 18:12:45,637] org.eclipse.jetty.server.Server: Started @2632ms
