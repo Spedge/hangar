@@ -8,17 +8,24 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/test")
-public class TestRequest {
-	
-	@PUT
-	@Path("/headers")
-	public Response testThing(@Context HttpHeaders httpHeaders)
-	{
-		for(MediaType mt : httpHeaders.getAcceptableMediaTypes())
-		{
-			System.out.println("MediaType : " + mt.getType());
-		}
-		
-		return Response.ok().build();
-	}
+public class TestRequest
+{
+    /**
+     * Simple way of looking at the headers of a request.
+     * Handy when working with Dropwizard.
+     * 
+     * @param httpHeaders Headers of the request
+     * @return Responses
+     */
+    @PUT
+    @Path("/headers")
+    public Response testThing(@Context HttpHeaders httpHeaders)
+    {
+        for (MediaType mt : httpHeaders.getAcceptableMediaTypes())
+        {
+            System.out.println("MediaType : " + mt.getType());
+        }
+
+        return Response.ok().build();
+    }
 }

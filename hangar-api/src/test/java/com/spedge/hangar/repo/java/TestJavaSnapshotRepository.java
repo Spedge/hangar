@@ -26,7 +26,7 @@ import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.memory.InMemoryIndex;
 import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.api.JavaSnapshotAPI;
+import com.spedge.hangar.repo.java.api.JavaSnapshotEndpoint;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
@@ -36,7 +36,7 @@ import com.spedge.hangar.testutils.TestStorage.FakeStreamingOutput;
 
 public class TestJavaSnapshotRepository {
 	
-	private JavaSnapshotAPI jsr;
+	private JavaSnapshotEndpoint jsr;
 	private TestStorage storage;
 	private InMemoryIndex index;
 	
@@ -44,7 +44,7 @@ public class TestJavaSnapshotRepository {
 	public void prepareSnapshotRepo() throws StorageException, IndexException
 	{
 		// Add mock storage and index to repo
-		jsr = new JavaSnapshotAPI();
+		jsr = new JavaSnapshotEndpoint();
 		
 		StorageConfiguration sc = new StorageConfiguration();
 		sc.setUploadPath("test-path");
