@@ -43,6 +43,11 @@ function test_execution()
 	fi
 }
 
+function clear_repository()
+{
+	rm -rf /opt/test/repository/*
+}
+
 # Scenario 1 - A simple package
 printf 'Scenario 1 - Package Snapshot...' 
 test_execution mvn -s settings.xml -f project-1/pom.xml package
@@ -55,3 +60,17 @@ printf 'Scenario 2 - Deploy Snapshot....'
 test_execution mvn -s settings.xml -f project-1/pom.xml deploy
 printf "\n"
 
+bats project-1/test-1.bats
+
+# Scenario 3 - Let's run a deploy
+printf 'Scenario 3 - Deploy Release....'
+test_execution mvn -s settings.xml -f project-2/pom.xml deploy
+printf "\n"
+
+bats project-2/test-1.bats
+clear_repository
+
+# Scenario 4 - Let's package using the last two artifacts
+printf 'Scenario 4 - Get custom artifacts'
+test_execution mvn -s settings.xml -f project-3/pom.xml deploy
+printf "\n"
