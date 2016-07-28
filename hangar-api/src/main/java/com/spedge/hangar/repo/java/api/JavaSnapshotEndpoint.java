@@ -184,8 +184,7 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
                                    @PathParam("type") String type,
                                    InputStream uploadedInputStream)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                version);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
         logger.debug("[Uploading Metadata] " + key.toString());
 
         StorageRequest sr = new StorageRequest();

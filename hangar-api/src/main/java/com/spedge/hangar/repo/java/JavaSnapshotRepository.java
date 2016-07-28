@@ -57,32 +57,29 @@ public abstract class JavaSnapshotRepository extends JavaRepository
     {
         try
         {
-            // We need two copies for this to work - we can't just use the
-            // request stream twice
-            // as you can't seem to reset it (makes sense)
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-            // Now we need to marshal the XML and determine the current snapshot
-            // version.
-            InputStream in = new ByteArrayInputStream(out.toByteArray());
-            JavaMetadata metadata = (JavaMetadata) JAXB.unmarshal(in, JavaMetadata.class);
-
-            logger.debug("[Snapshot] Uploading snapshot "
-                    + metadata.getVersioning().getSnapshot().getVersion() + " for "
-                    + key.toString());
+            // We need two copies for this to work - we can't just use the request stream twice     
+            // as you can't seem to reset it (makes sense)      
+            ByteArrayOutputStream out = new ByteArrayOutputStream();        
+            InputStream in = new TeeInputStream(sr.getStream(), out);       
             
-            InputStream tis = new TeeInputStream(sr.getStream(), out);
-
-            // Use the input to write it to disk
-            JavaIndexArtifact ia = (JavaIndexArtifact) addArtifactToStorage(key,
-                    StorageRequest.create(sr.getFilename(), tis, sr.getLength()));
-            closeAllStreams(tis);
-
-            ia.setSnapshotVersion(metadata.getVersioning().getSnapshot().getVersion());
-            getIndex().addArtifact(key, ia);
-
-            sr.closeStream();
-            closeAllStreams(in);
+            // Use the input to write it to disk        
+            StorageRequest msr = StorageRequest.create(sr.getFilename(), in, sr.getLength());
+            final JavaIndexArtifact ia = (JavaIndexArtifact) addArtifactToStorage(key, msr);      
+            closeAllStreams(in);        
+           
+            // Now we need to marshal the XML and determine the current snapshot version.       
+            in = new ByteArrayInputStream(out.toByteArray());       
+            JavaMetadata metadata = (JavaMetadata) JAXB.unmarshal(in, JavaMetadata.class);      
+          
+            logger.debug("[Snapshot] Uploading snapshot " 
+                         + metadata.getVersioning().getSnapshot().getVersion() 
+                         + " for " + key.toString());      
+            
+            ia.setSnapshotVersion(metadata.getVersioning().getSnapshot().getVersion());     
+            getIndex().addArtifact(key, ia);        
+           
+            sr.closeStream();       
+            closeAllStreams(in);        
             return Response.ok().build();
         }
         catch (IndexException ie)

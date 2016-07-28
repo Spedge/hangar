@@ -34,12 +34,7 @@ RUN \
 	&& cd bats \
 	&& ./install.sh /opt/test/bats \
 	&& ln -s /opt/test/bats/bin/bats /usr/bin/bats
-	
-	
-#RUN \
-    # Install any tools to run bats tests
-#	apk add --update "wc"
-	
+		
 # To store Java preferences
 RUN mkdir -p ${JAVA_PREFS}
 RUN chown -R nobody.nobody ${JAVA_PREFS}
