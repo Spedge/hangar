@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.spedge</groupId>
-	<artifactId>hangar-test-project1</artifactId>
+	<artifactId>hangar-test-project3</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
@@ -15,6 +15,18 @@
 			<artifactId>dropwizard-core</artifactId>
 			<version>${dropwizard.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.spedge</groupId>
+			<artifactId>hangar-test-project1</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>	
+		
+		<dependency>
+			<groupId>com.spedge</groupId>
+			<artifactId>hangar-test-project2</artifactId>
+			<version>0.0.1</version>
+		</dependency>	
 	</dependencies>
 
 	<distributionManagement>
