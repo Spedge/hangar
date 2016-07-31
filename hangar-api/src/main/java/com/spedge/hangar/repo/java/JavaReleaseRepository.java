@@ -43,10 +43,8 @@ public abstract class JavaReleaseRepository extends JavaRepository
             // in the index for it.
             String version = metadata.getVersioning().getLatestReleaseVersion();
             logger.debug("[Release] Uploading release " + version + " for " + key.toString());
-            JavaIndexKey releaseKey = new JavaIndexKey(key.getType(), key.getGroup(),
-                    key.getArtifact(), version);
-            IndexArtifact releaseIa = getStorage().generateArtifactPath(key.getType(), getPath(),
-                    releaseKey);
+            JavaIndexKey releaseKey = new JavaIndexKey(key.getType(), key.getGroup(), key.getArtifact(), version);
+            IndexArtifact releaseIa = getStorage().generateArtifactPath(key.getType(), getPath(), releaseKey);
 
             getIndex().addArtifact(releaseKey, releaseIa);
 

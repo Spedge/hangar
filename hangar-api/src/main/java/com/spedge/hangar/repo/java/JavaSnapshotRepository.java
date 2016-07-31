@@ -7,52 +7,16 @@ import com.spedge.hangar.repo.java.metadata.JavaMetadata;
 import com.spedge.hangar.storage.StorageRequest;
 
 import org.apache.commons.io.input.TeeInputStream;
-
 import org.eclipse.jetty.http.HttpStatus;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import javax.xml.bind.JAXB;
 
 public abstract class JavaSnapshotRepository extends JavaRepository
 {
-    /**
-     * This version is different as we need to re-write the filename with the
-     * timestamp for the latest version.
-     * 
-     * @param key
-     *            IndexKey to find the Artifact in the Index
-     * @param filename
-     *            Filename from the request
-     * @return StreamingOutput from the Storage Layer
-     */
-    protected StreamingOutput getSnapshotArtifact(JavaIndexKey key, String filename)
-    {
-        try
-        {
-            if (getIndex().isArtifact(key))
-            {
-                JavaIndexArtifact ia = (JavaIndexArtifact) getIndex().getArtifact(key);
-                String snapshotFilename = filename.replace(key.getVersion(),
-                        ia.getSnapshotVersion());
-                return getStorage().getArtifactStream(ia, snapshotFilename);
-            }
-            else
-            {
-                throw new NotFoundException();
-            }
-        }
-        catch (IndexException ie)
-        {
-            throw new InternalServerErrorException();
-        }
-    }
-
     protected Response addSnapshotMetadata(JavaIndexKey key, StorageRequest sr)
     {
         try

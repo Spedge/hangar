@@ -38,13 +38,12 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
                                                @PathParam("version") String version,
                                                @PathParam("filename") String filename)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                version);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
         logger.debug("[Downloading Snapshot] " + key);
 
         return getSnapshotArtifact(key, filename);
     }
-    
+        
     /**
      * Uploads an Snapshot Artifact to storage
      * Example Path : /snapshots/java/com/spedge/hangar-artifact/1.0.0-SNAPSHOT/hangar-artifact-1.0.0-SNAPSHOT.jar

@@ -1,7 +1,10 @@
 package com.spedge.hangar.repo.java;
 
+import com.google.common.io.ByteStreams;
+
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexArtifact;
@@ -15,6 +18,7 @@ import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
+
 import io.dropwizard.setup.Environment;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.http.HttpStatus;
@@ -22,15 +26,25 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
+
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-
 
 @Path("/java")
 public abstract class JavaRepository implements IRepository
@@ -110,20 +124,28 @@ public abstract class JavaRepository implements IRepository
 
     protected StreamingOutput getArtifact(JavaIndexKey key, String filename)
     {
-        try
+        if(Pattern.matches("[.\\d\\.]*-SNAPSHOT", key.getVersion()))
         {
-            if (index.isArtifact(key))
-            {
-                return getStorage().getArtifactStream(index.getArtifact(key), filename);
-            }
-            else
-            {
-                throw new NotFoundException();
-            }
+            logger.info("[Downloading Snapshot] " + key.toString());
+            return getSnapshotArtifact(key, filename);
         }
-        catch (IndexException ie)
+        else
         {
-            throw new InternalServerErrorException();
+            try
+            {
+                if (index.isArtifact(key))
+                {
+                    return getStorage().getArtifactStream(index.getArtifact(key), filename);
+                }
+                else
+                {
+                    throw new NotFoundException();
+                }
+            }
+            catch (IndexException ie)
+            {
+                throw new InternalServerErrorException();
+            }
         }
     }
 
@@ -180,6 +202,109 @@ public abstract class JavaRepository implements IRepository
             return ia;
         }
         catch (StorageException se)
+        {
+            throw new InternalServerErrorException();
+        }
+    }
+    
+    /**
+     * This version is different as we need to re-write the filename with the
+     * timestamp for the latest version.
+     * 
+     * @param key
+     *            IndexKey to find the Artifact in the Index
+     * @param filename
+     *            Filename from the request
+     * @return StreamingOutput from the Storage Layer
+     */
+    protected StreamingOutput getSnapshotArtifact(JavaIndexKey key, String filename)
+    {
+        logger.info("[Downloading Snapshot] " + key);
+        try
+        {
+            if (getIndex().isArtifact(key))
+            {
+                JavaIndexArtifact ia = (JavaIndexArtifact) getIndex().getArtifact(key);
+                String snapshotFilename = filename.replace(key.getVersion(), ia.getSnapshotVersion());
+                return getStorage().getArtifactStream(ia, snapshotFilename);
+            }
+            else
+            {
+                throw new NotFoundException();
+            }
+        }
+        catch (IndexException ie)
+        {
+            throw new InternalServerErrorException();
+        }
+    }
+    
+    protected StreamingOutput getProxyArtifact(String[] proxies, JavaIndexKey key, String filename)
+    {
+        logger.info("[Downloading Proxied Artifact] " + key);
+        try
+        {
+            for (String source : proxies)
+            {
+                // So the artifact doesn't exist. We try and download it and
+                // save it to disk.
+                Client client = ClientBuilder.newClient();
+                WebTarget target = client.target(source).path(key.getGroup().replace(".", "/") + "/" 
+                                                            + key.getArtifact() + "/" 
+                                                            + key.getVersion() + "/" + filename);
+
+                Invocation.Builder builder = target.request(MediaType.WILDCARD);
+                Response resp = builder.get();
+
+                if (resp.getStatus() == HttpStatus.OK_200)
+                {
+                    logger.info("[Proxy] Downloading from " + source);
+
+                    // We need to load it into memory. We'll look at doing
+                    // this another way
+                    // (perhaps to disk first) but I'd rather download then
+                    // upload to S3 and back to the client
+                    // concurrently. Not sure if this is possible but it'd
+                    // save a bunch of time.
+                    InputStream in = resp.readEntity(InputStream.class);
+
+                    byte[] byteArray = IOUtils.toByteArray(in);
+                    resp.close();
+
+                    // Now upload the artifact to our proxy location.
+                    StorageRequest sr = new StorageRequest();
+                    sr.setFilename(filename);
+                    sr.setStream(new ByteArrayInputStream(byteArray));
+                    sr.setLength(resp.getLength());
+                    
+                    // Ok now we've downloaded the thing, we'll use it.
+                    IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
+                    getStorage().uploadSnapshotArtifactStream(ia, sr);
+
+                    // We should add it to the index now. Most of these
+                    // don't have metadata, so we
+                    // add it to the index as soon as we get it.
+                    getIndex().addArtifact(key, ia);
+
+                    // We take our copy and return it to the user
+                    // post-upload.
+                    final InputStream writer = new ByteArrayInputStream(byteArray);
+                    return new StreamingOutput()
+                    {
+
+                        public void write(OutputStream os)
+                                throws IOException, WebApplicationException
+                        {
+                            ByteStreams.copy(writer, os);
+                            writer.close();
+                        }
+                    };
+                }
+            }
+
+            throw new NotFoundException();
+        }
+        catch (StorageException | IndexConfictException | IndexException | IOException exp)
         {
             throw new InternalServerErrorException();
         }

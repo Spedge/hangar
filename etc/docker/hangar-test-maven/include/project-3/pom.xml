@@ -28,6 +28,14 @@
 			<version>0.0.1</version>
 		</dependency>	
 	</dependencies>
+	
+	<repositories>
+	  <repository>
+	    <id>hangar</id>
+	    <name>Hangar</name>
+	    <url>http://${env.HANGAR_URL}/java</url>
+	  </repository>
+    </repositories>
 
 	<distributionManagement>
 	   <snapshotRepository>
