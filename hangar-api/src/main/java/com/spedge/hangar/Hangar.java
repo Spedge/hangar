@@ -1,6 +1,9 @@
 package com.spedge.hangar;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.spedge.hangar.config.HangarConfiguration;
+import com.spedge.hangar.config.HangarInjector;
 import com.spedge.hangar.repo.IRepository;
 import com.spedge.hangar.requests.TestRequest;
 
@@ -21,7 +24,9 @@ public class Hangar extends Application<HangarConfiguration>
 
     public static void main(String[] args) throws Exception
     {
-        new Hangar().run(args);
+        Injector injector = Guice.createInjector(new HangarInjector());
+
+        injector.getInstance(Hangar.class).run(args);
     }
 
     @Override
