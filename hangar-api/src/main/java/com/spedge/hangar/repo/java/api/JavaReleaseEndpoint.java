@@ -6,6 +6,7 @@ import com.spedge.hangar.repo.java.JavaReleaseRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageRequest;
 
+import java.io.IOException;
 import java.io.InputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -83,14 +84,14 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
                     throw new WebApplicationException(Status.CONFLICT);
                 }
             }
+            
+            StorageRequest sr = StorageRequest.create(filename, uploadedInputStream, request.getContentLength());
+            return addArtifact(key, sr);
         }
-        catch (IndexException exc)
+        catch (IndexException | IOException exc)
         {
-            throw new InternalServerErrorException();
-        }
-
-        return addArtifact(key,
-                StorageRequest.create(filename, uploadedInputStream, request.getContentLength()));
+            throw new InternalServerErrorException(exc);
+        }       
     }
 
     /**
@@ -134,24 +135,30 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
                                            @PathParam("type") String type, 
                                            InputStream uploadedInputStream)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                "metadata");
+        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
         logger.debug("[Uploading Metadata] " + key.toString());
 
-        StorageRequest sr = new StorageRequest();
-        sr.setLength(request.getContentLength());
-        sr.setStream(uploadedInputStream);
+        try
+        {
+            StorageRequest sr = new StorageRequest();
+            sr.setLength(request.getContentLength());
+            sr.setStream(uploadedInputStream);
 
-        if (!type.isEmpty())
-        {
-            sr.setFilename("maven-metadata.xml" + type);
-            return addArtifact(key, sr);
+            if (!type.isEmpty())
+            {
+                sr.setFilename("maven-metadata.xml" + type);
+                return addArtifact(key, sr);
+            }
+            else
+            {
+                sr.setFilename("maven-metadata.xml");
+                return addReleaseMetadata(key, sr);
+            }
         }
-        else
+        catch (IOException exc)
         {
-            sr.setFilename("maven-metadata.xml");
-            return addReleaseMetadata(key, sr);
-        }
+            throw new InternalServerErrorException(exc);
+        }    
     }
 
     public RepositoryType getType()

@@ -61,7 +61,7 @@ public class TestJavaSnapshotRepository {
 	}
 	
 	@Test
-	public void TestGetSnapshot() throws StorageException, IndexConfictException
+	public void TestGetSnapshot() throws StorageException, IndexConfictException, IOException
 	{
 		// Define mock artifact
 		String group = "com.spedge.test";
@@ -75,7 +75,8 @@ public class TestJavaSnapshotRepository {
 		IndexArtifact ia = storage.generateArtifactPath(key);
 		index.addArtifact(key, ia);
 		
-		storage.uploadSnapshotArtifactStream(ia, StorageRequest.create(filename, null, 0));
+		byte[] storageArray = "Any String you want".getBytes();
+		storage.uploadSnapshotArtifactStream(ia, StorageRequest.create(filename, storageArray, 0));
 		
 		// See what happens!
 		FakeStreamingOutput fso = (FakeStreamingOutput) jsr.getSnapshotArtifact(webgroup, artifact, version, filename);

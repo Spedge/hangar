@@ -5,7 +5,6 @@ import com.spedge.hangar.repo.java.JavaRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.StreamingOutput;
@@ -75,15 +74,8 @@ public class JavaDownloadEndpoint extends JavaRepository
                                        @PathParam("filename") String filename)
     {
         JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
+        return super.getProxiedArtifact(proxies, key, filename);
         
-        try
-        {
-            return getArtifact(key, filename);
-        }
-        catch (NotFoundException nfe)
-        {
-            return getProxyArtifact(proxies, key, filename);
-        }
     }
 
     public String[] getProxy()

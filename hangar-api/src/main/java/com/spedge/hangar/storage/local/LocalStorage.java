@@ -185,7 +185,7 @@ public class LocalStorage extends Storage
         try
         {
             Files.createDirectories(outputPath);
-            Files.copy(sr.getStream(), outputPathArtifact, options);
+            Files.copy(sr.getNewStream(), outputPathArtifact, options);
         }
         catch (IOException ioe)
         {

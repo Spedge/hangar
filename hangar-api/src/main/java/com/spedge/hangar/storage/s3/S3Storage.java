@@ -235,7 +235,7 @@ public class S3Storage extends Storage
             om.setContentLength(sr.getLength());
 
             Upload myUpload = tx.upload(bucketName,
-                            getPath() + ia.getLocation() + "/" + sr.getFilename(), sr.getStream(),
+                            getPath() + ia.getLocation() + "/" + sr.getFilename(), sr.getNewStream(),
                             om);
             myUpload.waitForCompletion();
         }

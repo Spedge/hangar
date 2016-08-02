@@ -5,10 +5,12 @@ import com.spedge.hangar.repo.java.JavaSnapshotRepository;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.StorageRequest;
 
+import java.io.IOException;
 import java.io.InputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -65,16 +67,22 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
                                    @PathParam("filename") String filename,
                                    InputStream uploadedInputStream)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                version);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
         logger.debug("[Uploading Snapshot] " + key.toString());
 
-        StorageRequest sr = new StorageRequest();
-        sr.setFilename(filename);
-        sr.setLength(request.getContentLength());
-        sr.setStream(uploadedInputStream);
-
-        return addArtifact(key, sr);
+        try
+        {
+            StorageRequest sr = new StorageRequest();
+            sr.setFilename(filename);
+            sr.setLength(request.getContentLength());
+            sr.setStream(uploadedInputStream);
+    
+            return addArtifact(key, sr);
+        }
+        catch (IOException ioe)
+        {
+            throw new InternalServerErrorException(ioe);
+        }
     }
 
     /**
@@ -118,23 +126,29 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
                                            @PathParam("type") String type, 
                                            InputStream uploadedInputStream)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                "metadata");
+        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
         logger.debug("[Uploading Metadata] " + key.toString());
 
-        StorageRequest sr = new StorageRequest();
-        sr.setLength(request.getContentLength());
-        sr.setStream(uploadedInputStream);
-
-        if (!type.isEmpty())
+        try
         {
-            sr.setFilename("maven-metadata.xml" + type);
-            return addArtifact(key, sr);
+            StorageRequest sr = new StorageRequest();
+            sr.setLength(request.getContentLength());
+            sr.setStream(uploadedInputStream);
+            
+            if (!type.isEmpty())
+            {
+                sr.setFilename("maven-metadata.xml" + type);
+                return addArtifact(key, sr);
+            }
+            else
+            {
+                sr.setFilename("maven-metadata.xml");
+                return addMetadata(key, sr);
+            }
         }
-        else
+        catch (IOException ioe)
         {
-            sr.setFilename("maven-metadata.xml");
-            return addMetadata(key, sr);
+            throw new InternalServerErrorException(ioe);
         }
     }
 
@@ -186,19 +200,26 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
         JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
         logger.debug("[Uploading Metadata] " + key.toString());
 
-        StorageRequest sr = new StorageRequest();
-        sr.setLength(request.getContentLength());
-        sr.setStream(uploadedInputStream);
-
-        if (!type.isEmpty())
+        try
         {
-            sr.setFilename("maven-metadata.xml" + type);
-            return addArtifact(key, sr);
+            StorageRequest sr = new StorageRequest();
+            sr.setLength(request.getContentLength());
+            sr.setStream(uploadedInputStream);
+    
+            if (!type.isEmpty())
+            {
+                sr.setFilename("maven-metadata.xml" + type);
+                return addArtifact(key, sr);
+            }
+            else
+            {
+                sr.setFilename("maven-metadata.xml");
+                return addSnapshotMetadata(key, sr);
+            }
         }
-        else
+        catch (IOException ioe)
         {
-            sr.setFilename("maven-metadata.xml");
-            return addSnapshotMetadata(key, sr);
+            throw new InternalServerErrorException(ioe);
         }
     }
 

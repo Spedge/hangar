@@ -9,8 +9,11 @@ package com.spedge.hangar.repo;
  */
 public enum RepositoryType
 {
-    RELEASE_JAVA(RepositoryLanguage.JAVA), SNAPSHOT_JAVA(RepositoryLanguage.JAVA), PROXY_JAVA(
-            RepositoryLanguage.JAVA), UNKNOWN(RepositoryLanguage.UNKNOWN);
+    RELEASE_JAVA(RepositoryLanguage.JAVA), 
+    SNAPSHOT_JAVA(RepositoryLanguage.JAVA), 
+    PROXY_JAVA(RepositoryLanguage.JAVA), 
+    PROXY_PYTHON(RepositoryLanguage.PYTHON),
+    UNKNOWN(RepositoryLanguage.UNKNOWN);
 
     private RepositoryLanguage lang;
 
