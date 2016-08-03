@@ -17,6 +17,7 @@ Below is a typical installation of Hangar...
 
 So far...
 
+* NEW (Python) Basic pip proxy (no storage / cache yet)
 * (Java) Allow S3-backed Storage
 * (Java) Create zookeeper-based index
 * (Java) Allow downloading of latest snapshot

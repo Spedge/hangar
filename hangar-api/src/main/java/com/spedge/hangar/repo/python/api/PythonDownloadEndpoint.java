@@ -16,12 +16,21 @@ public class PythonDownloadEndpoint extends PythonRepository
     private String[] proxies;
     
     @GET
-    @Path("/{artifact : .+}/")
+    @Path("/simple/{artifact : .+}/")
     public StreamingOutput getArtifact(@PathParam("artifact") String artifact)
     {
-        PythonIndexKey pk = new PythonIndexKey(getType(), artifact);
+        return super.getProxiedArtifact(proxies, "/simple/" + artifact);       
+    }
     
-        return super.getProxiedArtifact(proxies, pk, artifact);       
+    @GET
+    @Path("/packages/{base1 : .+}/{base2 : .+}/{baseMax : .+}/{artifact : .+}")
+    public StreamingOutput getPackage(@PathParam("base1") String base1,
+                                      @PathParam("base2") String base2,
+                                      @PathParam("baseMax") String baseMax,
+                                      @PathParam("artifact") String artifact)
+    {
+        PythonIndexKey pk = new PythonIndexKey(getType(), base1, base2, baseMax, artifact);
+        return super.getProxiedArtifact(proxies, "/packages" + pk.getPath());       
     }
 
     @Override

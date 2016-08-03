@@ -22,9 +22,9 @@ public abstract class PythonRepository extends RepositoryBase
         return checks;
     }
 
-    public StreamingOutput getProxiedArtifact(String[] proxies, PythonIndexKey key, String artifact)
+    public StreamingOutput getProxiedArtifact(String[] proxies, String path)
     {
-        StorageRequest sr = super.requestProxiedArtifact(proxies, "/" + artifact + "json", key, "");
+        StorageRequest sr = super.requestProxiedArtifact(proxies, path, "");
         return sr.getStreamingOutput();
     }
 }

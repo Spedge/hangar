@@ -89,7 +89,7 @@ public abstract class RepositoryBase implements IRepository
         return index;
     }
     
-    protected StorageRequest requestProxiedArtifact(String[] proxies, String path, IndexKey key, String filename)
+    protected StorageRequest requestProxiedArtifact(String[] proxies, String path, String filename)
     {
         try
         {

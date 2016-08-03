@@ -4,7 +4,6 @@ import com.spedge.hangar.repo.RepositoryType;
 
 public class IndexKey
 {
-
     private String key;
     private RepositoryType type = RepositoryType.UNKNOWN;
 

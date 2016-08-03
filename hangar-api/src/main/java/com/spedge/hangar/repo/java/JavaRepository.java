@@ -210,7 +210,7 @@ public abstract class JavaRepository extends RepositoryBase
                             + key.getVersion() + "/" 
                             + filename;
             
-            StorageRequest sr = requestProxiedArtifact(proxies, path, key, filename);
+            StorageRequest sr = requestProxiedArtifact(proxies, path, filename);
             addArtifactToStorage(key, sr);
             
             return sr.getStreamingOutput();
