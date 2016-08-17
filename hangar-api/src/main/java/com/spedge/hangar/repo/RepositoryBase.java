@@ -120,12 +120,11 @@ public abstract class RepositoryBase implements IRepository
                     resp.close();
 
                     // Now upload the artifact to our proxy location.
-                    StorageRequest sr = new StorageRequest();
-                    sr.setFilename(filename);
-                    sr.setStream(byteArray);
-                    sr.setLength(resp.getLength());
-                    
-                    return sr;
+                    return new StorageRequest.StorageRequestBuilder()
+                                    .filename(filename)
+                                    .stream(byteArray)
+                                    .length(resp.getLength())
+                                    .build();
                 }
             }
             throw new NotFoundException();

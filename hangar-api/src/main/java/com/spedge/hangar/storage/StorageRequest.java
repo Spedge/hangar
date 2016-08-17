@@ -1,8 +1,8 @@
 package com.spedge.hangar.storage;
 
-import org.apache.commons.io.IOUtils;
-
 import com.google.common.io.ByteStreams;
+
+import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,75 +17,27 @@ public class StorageRequest
     private int length;
     private byte[] stream;
     private String filename;
+    
+    /**
+     * Creates a StorageRequest to be used to both store and retrieve data from 
+     * the Storage Layer.
+     * @param srb A StorageRequestBuilder to maintain an immutable object
+     */
+    public StorageRequest(StorageRequestBuilder srb)
+    {
+        this.length = srb.length;
+        this.stream = srb.stream;
+        this.filename = srb.filename;
+    }
 
     public int getLength()
     {
         return length;
     }
 
-    public void setLength(int length)
-    {
-        this.length = length;
-    }
-
-    public void setStream(byte[] byteArray)
-    {
-        this.stream = byteArray;
-    }
-    
-    public void setStream(InputStream uploadedInputStream) throws IOException
-    {
-        this.setStream(IOUtils.toByteArray(uploadedInputStream));
-    }
-
     public String getFilename()
     {
         return filename;
-    }
-
-    public void setFilename(String filename)
-    {
-        this.filename = filename;
-    }
-
-    /**
-     * Static method to create a new StorageRequest.
-     * 
-     * @param filename Name of the file
-     * @param input InputStream containing the contents of the file
-     * @param contentLength Length of the stream
-     * 
-     * @return Newly created StorageRequest
-     * @throws IOException during creation of stream byte-array.
-     */
-    public static StorageRequest create(String filename, InputStream input, int contentLength) throws IOException
-    {
-        StorageRequest sr = new StorageRequest();
-        sr.setFilename(filename);
-        sr.setLength(contentLength);
-        sr.setStream(IOUtils.toByteArray(input));
-
-        return sr;
-    }
-    
-    /**
-     * Static method to create a new StorageRequest.
-     * 
-     * @param filename Name of the file
-     * @param input InputStream containing the contents of the file
-     * @param contentLength Length of the stream
-     * 
-     * @return Newly created StorageRequest
-     * @throws IOException during creation of stream byte-array.
-     */
-    public static StorageRequest create(String filename, byte[] input, int contentLength) throws IOException
-    {
-        StorageRequest sr = new StorageRequest();
-        sr.setFilename(filename);
-        sr.setLength(contentLength);
-        sr.setStream(input);
-
-        return sr;
     }
     
     /**
@@ -111,7 +63,40 @@ public class StorageRequest
     {
         return new ByteArrayInputStream(stream);
     }
+    
+    public static class StorageRequestBuilder 
+    {
+        private int length;
+        private byte[] stream;
+        private String filename;
+        
+        public StorageRequestBuilder length(int length)
+        {
+            this.length = length;
+            return this;
+        }
 
-
-
+        public StorageRequestBuilder stream(byte[] byteArray)
+        {
+            this.stream = byteArray;
+            return this;
+        }
+        
+        public StorageRequestBuilder stream(InputStream uploadedInputStream) throws IOException
+        {
+            this.stream = IOUtils.toByteArray(uploadedInputStream);
+            return this;
+        }
+        
+        public StorageRequestBuilder filename(String filename)
+        {
+            this.filename = filename;
+            return this;
+        }
+        
+        public StorageRequest build() 
+        {
+            return new StorageRequest(this);
+        }
+    }
 }

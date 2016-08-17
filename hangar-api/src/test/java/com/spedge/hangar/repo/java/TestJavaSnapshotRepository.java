@@ -76,7 +76,14 @@ public class TestJavaSnapshotRepository {
 		index.addArtifact(key, ia);
 		
 		byte[] storageArray = "Any String you want".getBytes();
-		storage.uploadSnapshotArtifactStream(ia, StorageRequest.create(filename, storageArray, 0));
+		
+        StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+                                              .length(0)
+                                              .stream(storageArray)
+                                              .filename(filename)
+                                              .build();
+        
+		storage.uploadSnapshotArtifactStream(ia, sr);
 		
 		// See what happens!
 		FakeStreamingOutput fso = (FakeStreamingOutput) jsr.getSnapshotArtifact(webgroup, artifact, version, filename);

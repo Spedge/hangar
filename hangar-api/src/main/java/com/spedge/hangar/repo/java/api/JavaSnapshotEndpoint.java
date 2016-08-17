@@ -71,12 +71,13 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
         logger.debug("[Uploading Snapshot] " + key.toString());
 
         try
-        {
-            StorageRequest sr = new StorageRequest();
-            sr.setFilename(filename);
-            sr.setLength(request.getContentLength());
-            sr.setStream(uploadedInputStream);
-    
+        {            
+            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+                                                  .length(request.getContentLength())
+                                                  .stream(uploadedInputStream)
+                                                  .filename(filename)
+                                                  .build();
+            
             return addArtifact(key, sr);
         }
         catch (IOException ioe)
@@ -131,18 +132,18 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
 
         try
         {
-            StorageRequest sr = new StorageRequest();
-            sr.setLength(request.getContentLength());
-            sr.setStream(uploadedInputStream);
-            
+            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+                            .length(request.getContentLength())
+                            .stream(uploadedInputStream)
+                            .filename("maven-metadata.xml" + type)
+                            .build();
+                        
             if (!type.isEmpty())
             {
-                sr.setFilename("maven-metadata.xml" + type);
                 return addArtifact(key, sr);
             }
             else
             {
-                sr.setFilename("maven-metadata.xml");
                 return addMetadata(key, sr);
             }
         }
@@ -202,18 +203,18 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
 
         try
         {
-            StorageRequest sr = new StorageRequest();
-            sr.setLength(request.getContentLength());
-            sr.setStream(uploadedInputStream);
+            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+                            .length(request.getContentLength())
+                            .stream(uploadedInputStream)
+                            .filename("maven-metadata.xml" + type)
+                            .build();
     
             if (!type.isEmpty())
             {
-                sr.setFilename("maven-metadata.xml" + type);
                 return addArtifact(key, sr);
             }
             else
             {
-                sr.setFilename("maven-metadata.xml");
                 return addSnapshotMetadata(key, sr);
             }
         }

@@ -8,6 +8,7 @@ import com.spedge.hangar.storage.StorageRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -85,7 +86,12 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
                 }
             }
             
-            StorageRequest sr = StorageRequest.create(filename, uploadedInputStream, request.getContentLength());
+            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+                            .length(request.getContentLength())
+                            .stream(uploadedInputStream)
+                            .filename(filename)
+                            .build();
+            
             return addArtifact(key, sr);
         }
         catch (IndexException | IOException exc)
@@ -140,18 +146,18 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
 
         try
         {
-            StorageRequest sr = new StorageRequest();
-            sr.setLength(request.getContentLength());
-            sr.setStream(uploadedInputStream);
+            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+                                                  .length(request.getContentLength())
+                                                  .stream(uploadedInputStream)
+                                                  .filename("maven-metadata.xml" + type)
+                                                  .build();
 
             if (!type.isEmpty())
             {
-                sr.setFilename("maven-metadata.xml" + type);
                 return addArtifact(key, sr);
             }
             else
             {
-                sr.setFilename("maven-metadata.xml");
                 return addReleaseMetadata(key, sr);
             }
         }
