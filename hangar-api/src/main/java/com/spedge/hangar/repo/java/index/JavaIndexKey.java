@@ -13,26 +13,6 @@ public class JavaIndexKey extends IndexKey
 
     /**
      * <p>Creates a Key to be used to register an IndexArtifact with
-     * the Index layer. Formats a full string into GAV using : as delimiter
-     * 
-     * Example : com.spedge:hangar-artifact:1.0.0 </p>
-     * 
-     * @param type Type of Repository this Artifact will be stored from.
-     * @param key String to be reformated.
-     */
-    public JavaIndexKey(RepositoryType type, String key)
-    {
-        super(type, key);
-
-        String[] split = key.split(":");
-
-        this.group = split[0];
-        this.artifact = (split.length > 1) ? split[1] : "";
-        this.version = (split.length > 2) ? split[2] : "";
-    }
-
-    /**
-     * <p>Creates a Key to be used to register an IndexArtifact with
      * the Index layer. </p>
      * 
      * @param type Type of Repository this Artifact will be stored from.
@@ -87,10 +67,22 @@ public class JavaIndexKey extends IndexKey
         {
             return false;
         }
+        // parent check
+        if (! super.equals(object)) 
+        {
+            return false;
+        }
         
         JavaIndexKey jik = (JavaIndexKey) object;
-
-        return Objects.equals(toString(), jik.toString())
-                && Objects.equals(getType(), jik.getType());
+        return Objects.equals(toString(), jik.toString()) 
+            && Objects.equals(getGroup(), jik.getGroup())
+            && Objects.equals(getArtifact(), jik.getArtifact())
+            && Objects.equals(getVersion(), jik.getVersion());
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        return (int) group.hashCode() * artifact.hashCode() * version.hashCode() * super.hashCode();
     }
 }

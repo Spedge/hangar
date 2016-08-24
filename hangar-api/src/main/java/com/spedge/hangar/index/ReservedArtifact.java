@@ -7,9 +7,8 @@ import java.util.UUID;
 
 public class ReservedArtifact extends IndexArtifact
 {
-
     private static final long serialVersionUID = -5676826253822808582L;
-    private UUID id;
+    private final UUID id;
     private Map<String, Boolean> files = new HashMap<String, Boolean>();
 
     public ReservedArtifact()

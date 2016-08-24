@@ -41,7 +41,12 @@ public abstract class Storage implements IStorage
 
         if (type.getLanguage().equals(RepositoryLanguage.JAVA))
         {
-            ia = generateJavaArtifactPath(new JavaIndexKey(type, key.toPath()), uploadPath);
+            String[] split = key.toPath().split(":");
+            String group = split[0];
+            String artifact = (split.length > 1) ? split[1] : "";
+            String version = (split.length > 2) ? split[2] : "";
+            
+            ia = generateJavaArtifactPath(new JavaIndexKey(type, group, artifact, version), uploadPath);
         }
         else
         {
