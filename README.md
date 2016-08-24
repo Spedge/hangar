@@ -1,4 +1,7 @@
-[![Build Status](https://travis-ci.org/Spedge/hangar.svg?branch=master)](https://travis-ci.org/Spedge/hangar)
+[![Build Status](https://travis-ci.org/Spedge/hangar.svg?branch=master)](https://travis-ci.org/Spedge/hangar) [![Documentation Status](https://readthedocs.org/projects/hangar/badge/?version=latest)](http://hangar.readthedocs.io/en/latest/?badge=latest) 
+[![](https://images.microbadger.com/badges/image/spedge/hangar-api.svg)](https://microbadger.com/images/spedge/hangar-api "* hangar-index Get your own image badge on microbadger.com")
+
+
 
 # hangar
 After many, many years of dealing with expensive, monolithic artifact management solutions - I thought I'd give it a go myself. Can't be that hard, right?
