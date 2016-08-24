@@ -7,7 +7,7 @@
   <mirrors>
     <mirror>
       <id>nexus</id>
-      <url>http://${env.HANGAR_URL}/java</url>
+      <url>http://${env.HANGAR_IP}:${env.HANGAR_PORT}/java</url>
       <mirrorOf>central</mirrorOf>
     </mirror>
   </mirrors>

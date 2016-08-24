@@ -20,11 +20,11 @@
 	<distributionManagement>
 	   <snapshotRepository>
 	      <id>hangar-snapshots</id>
-	      <url>http://${env.HANGAR_URL}/java/snapshots</url>
+	      <url>http://${env.HANGAR_IP}:${env.HANGAR_PORT}/java/snapshots</url>
 	   </snapshotRepository>
 	   <repository>
 	      <id>hangar-snapshots</id>
-	      <url>http://${env.HANGAR_URL}/java/releases</url>
+	      <url>http://${env.HANGAR_IP}:${env.HANGAR_PORT}/java/releases</url>
 	   </repository>
 	</distributionManagement>
 </project>
