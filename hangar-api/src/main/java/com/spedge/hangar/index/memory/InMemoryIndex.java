@@ -60,9 +60,9 @@ public class InMemoryIndex implements IIndex
     public void load(RepositoryType type, IStorage storage, String uploadPath)
             throws StorageException
     {
-        for (IndexKey key : storage.getArtifactKeys(type, uploadPath))
+        for (IndexKey key : storage.getArtifactKeys(uploadPath))
         {
-            index.put(key.toString(), storage.generateArtifactPath(type, uploadPath, key));
+            index.put(key.toString(), storage.getIndexArtifact(key, uploadPath));
         }
     }
 

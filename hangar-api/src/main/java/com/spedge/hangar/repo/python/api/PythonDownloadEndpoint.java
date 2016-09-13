@@ -1,15 +1,15 @@
 package com.spedge.hangar.repo.python.api;
 
+import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.python.PythonIndexKey;
+import com.spedge.hangar.repo.python.PythonRepository;
+import com.spedge.hangar.repo.python.PythonStorageTranslator;
+import com.spedge.hangar.storage.IStorageTranslator;
+
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.StreamingOutput;
-
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.index.JavaIndexKey;
-import com.spedge.hangar.repo.python.PythonIndexKey;
-import com.spedge.hangar.repo.python.PythonRepository;
 
 public class PythonDownloadEndpoint extends PythonRepository
 {
@@ -19,7 +19,7 @@ public class PythonDownloadEndpoint extends PythonRepository
     @Path("/simple/{artifact : .+}/")
     public StreamingOutput getArtifact(@PathParam("artifact") String artifact)
     {
-        return super.getProxiedArtifact(proxies, "/simple/" + artifact);       
+        return super.getMetadata(proxies, "/simple/" + artifact);       
     }
     
     @GET
@@ -30,15 +30,9 @@ public class PythonDownloadEndpoint extends PythonRepository
                                       @PathParam("artifact") String artifact)
     {
         PythonIndexKey pk = new PythonIndexKey(getType(), base1, base2, baseMax, artifact);
-        return super.getProxiedArtifact(proxies, "/packages" + pk.getPath());       
+        return super.getProxiedArtifact(proxies, "/packages" + pk.getPath(), pk);       
     }
 
-    @Override
-    public RepositoryType getType()
-    {
-        return RepositoryType.PROXY_PYTHON;
-    }
-    
     public String[] getProxy()
     {
         return proxies;
@@ -47,5 +41,17 @@ public class PythonDownloadEndpoint extends PythonRepository
     public void setProxy(String[] proxy)
     {
         this.proxies = proxy;
+    }
+    
+    @Override
+    public RepositoryType getType()
+    {
+        return RepositoryType.PROXY_PYTHON;
+    }
+    
+    @Override
+    public IStorageTranslator getStorageTranslator()
+    {
+        return new PythonStorageTranslator(getType());
     }
 }

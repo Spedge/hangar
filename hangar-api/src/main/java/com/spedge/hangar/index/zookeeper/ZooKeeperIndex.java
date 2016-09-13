@@ -125,14 +125,14 @@ public class ZooKeeperIndex implements IIndex
         {
             startClient(this.connectionString);
 
-            for (IndexKey key : storage.getArtifactKeys(type, uploadPath))
+            for (IndexKey key : storage.getArtifactKeys(uploadPath))
             {
                 String path = convertPath(key);
 
                 if (client.checkExists().forPath(path) == null)
                 {
                     client.create().creatingParentsIfNeeded().forPath(path, SerializationUtils
-                            .serialize(storage.generateArtifactPath(type, uploadPath, key)));
+                            .serialize(storage.getIndexArtifact(key, uploadPath)));
 
                     logger.info("[ZookeeperIndex] Adding " + path + " to index.");
                 }

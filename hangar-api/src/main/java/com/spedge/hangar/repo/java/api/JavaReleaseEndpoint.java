@@ -3,7 +3,9 @@ package com.spedge.hangar.repo.java.api;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaReleaseRepository;
+import com.spedge.hangar.repo.java.JavaStorageTranslator;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.StorageRequest;
 
 import java.io.IOException;
@@ -167,8 +169,15 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
         }    
     }
 
+    @Override
     public RepositoryType getType()
     {
         return repositoryType;
+    }
+    
+    @Override
+    public IStorageTranslator getStorageTranslator()
+    {
+        return new JavaStorageTranslator(getType());
     }
 }

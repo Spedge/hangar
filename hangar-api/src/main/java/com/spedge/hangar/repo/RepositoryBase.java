@@ -24,6 +24,7 @@ import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.storage.IStorage;
+import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
@@ -59,11 +60,12 @@ public abstract class RepositoryBase implements IRepository
         storage = configuration.getStorage();
         index = configuration.getIndex();
 
-        storage.initialiseStorage(storageConfig.getUploadPath());
+        storage.initialiseStorage(getStorageTranslator(), storageConfig.getUploadPath());
 
         index.load(getType(), storage, storageConfig.getUploadPath());
     }
 
+    protected abstract IStorageTranslator getStorageTranslator();
 
     public void setStorageConfiguration(StorageConfiguration storageConfig)
     {

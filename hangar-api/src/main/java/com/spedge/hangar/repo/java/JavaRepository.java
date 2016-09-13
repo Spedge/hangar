@@ -1,9 +1,5 @@
 package com.spedge.hangar.repo.java;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -11,44 +7,27 @@ import java.util.regex.Pattern;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.http.HttpStatus;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.health.HealthCheck;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.io.ByteStreams;
-import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryBase;
-import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
-import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
-
-import io.dropwizard.setup.Environment;
 
 @Path("/java")
 public abstract class JavaRepository extends RepositoryBase
 {
     protected final Logger logger = LoggerFactory.getLogger(JavaRepository.class);
-
-
 
     private JavaRepositoryHealthcheck check;
 
@@ -56,8 +35,6 @@ public abstract class JavaRepository extends RepositoryBase
     {
         check = new JavaRepositoryHealthcheck();
     }
-
-
 
     /**
      * Returns the health checks for this repository.
@@ -72,7 +49,7 @@ public abstract class JavaRepository extends RepositoryBase
 
     protected StreamingOutput getArtifact(JavaIndexKey key, String filename)
     {
-        if(Pattern.matches("[.\\d\\.]*-SNAPSHOT", key.getVersion()))
+        if (Pattern.matches("[.\\d\\.]*-SNAPSHOT", key.getVersion()))
         {
             logger.info("[Downloading Snapshot] " + key.toString());
             return getSnapshotArtifact(key, filename);
@@ -139,7 +116,7 @@ public abstract class JavaRepository extends RepositoryBase
         {
             // Create the entry for the index that contains current information
             // about the artifact.
-            IndexArtifact ia = getStorage().generateArtifactPath(getType(), getPath(), key);
+            IndexArtifact ia = getStorage().getIndexArtifact(key, getPath());
 
             // Upload the file we need.
             getStorage().uploadSnapshotArtifactStream(ia, sr);
@@ -184,19 +161,6 @@ public abstract class JavaRepository extends RepositoryBase
         }
     }
     
-    /*
-     * Sometimes we have multiple streams open - this is just a nice way of
-     * getting round it. Really, it'd be nice if the function took an array but
-     * there you go ;)
-     */
-    protected void closeAllStreams(InputStream... streams)
-    {
-        for (InputStream stream : streams)
-        {
-            IOUtils.closeQuietly(stream);
-        }
-    }
-
     public StreamingOutput getProxiedArtifact(String[] proxies, JavaIndexKey key, String filename)
     {
         try

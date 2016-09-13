@@ -2,7 +2,9 @@ package com.spedge.hangar.repo.java.api;
 
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaRepository;
+import com.spedge.hangar.repo.java.JavaStorageTranslator;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.IStorageTranslator;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -92,5 +94,11 @@ public class JavaDownloadEndpoint extends JavaRepository
     public RepositoryType getType()
     {
         return repositoryType;
+    }
+    
+    @Override
+    public IStorageTranslator getStorageTranslator()
+    {
+        return new JavaStorageTranslator(getType());
     }
 }

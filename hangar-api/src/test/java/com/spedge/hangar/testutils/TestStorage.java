@@ -17,6 +17,7 @@ import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaIndexArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
+import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
 
@@ -64,19 +65,20 @@ public class TestStorage implements IStorage
 	}
 
 	@Override
-	public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath) throws StorageException { return new ArrayList<IndexKey>(); }
+	public List<IndexKey> getArtifactKeys(String uploadPath) throws StorageException { return new ArrayList<IndexKey>(); }
 
 	@Override
-	public IndexArtifact generateArtifactPath(RepositoryType type, String uploadPath, IndexKey key) throws StorageException 
+	public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws StorageException 
 	{ 
 		IndexArtifact ia = new JavaIndexArtifact();
 		ia.setLocation("fakestorage");
 		return ia;
 	}
 
-	@Override
-	public void initialiseStorage(String uploadPath) throws StorageException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void initialiseStorage(IStorageTranslator st, String uploadPath) throws StorageException
+    {
+        // TODO Auto-generated method stub
+        
+    }
 }

@@ -2,7 +2,9 @@ package com.spedge.hangar.repo.java.api;
 
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaSnapshotRepository;
+import com.spedge.hangar.repo.java.JavaStorageTranslator;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.StorageRequest;
 
 import java.io.IOException;
@@ -224,8 +226,15 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
         }
     }
 
+    @Override
     public RepositoryType getType()
     {
         return repositoryType;
+    }
+    
+    @Override
+    public IStorageTranslator getStorageTranslator()
+    {
+        return new JavaStorageTranslator(getType());
     }
 }

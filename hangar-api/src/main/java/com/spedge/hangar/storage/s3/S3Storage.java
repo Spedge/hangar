@@ -19,17 +19,13 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.GetSessionTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetSessionTokenResult;
-
 import com.codahale.metrics.health.HealthCheck;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.repo.RepositoryLanguage;
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.JavaIndexArtifact;
-import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.Storage;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
@@ -39,6 +35,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
@@ -72,7 +69,7 @@ public class S3Storage extends Storage
     }
 
     @Override
-    public void initialiseStorage(String uploadPath) throws StorageException
+    public void initialiseStorage(IStorageTranslator st, String uploadPath) throws StorageException
     {
         // Unlike LocalStorage that requires paths, S3 works off of keys (like
         // Zookeeper) so we don't
@@ -142,41 +139,48 @@ public class S3Storage extends Storage
             client = new AmazonS3Client(creds);
             client.setEndpoint("s3-" + region + ".amazonaws.com");
         }
+        
+        // Finally, we register this path with the PathTranslators
+        addPathTranslator(st, getPath() + "/" + uploadPath + "/");
     }
 
     @Override
-    public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath)
-                    throws StorageException
+    public List<IndexKey> getArtifactKeys(String uploadPath) throws StorageException
     {
         String prefixPath = getPath() + "/" + uploadPath + "/";
+        IStorageTranslator st = getStorageTranslator(prefixPath);
+        
+        // Create a list for the index keys and start the timer.
         List<IndexKey> indices = new ArrayList<IndexKey>();
+
+        ListObjectsV2Request lovr = new ListObjectsV2Request();
+        lovr.setBucketName(bucketName);
+        lovr.setPrefix(prefixPath);
+   
         long start = System.currentTimeMillis();
-
-        if (type.getLanguage().equals(RepositoryLanguage.JAVA))
+        
+        for (String delimiter : st.getDelimiters())
         {
-            ListObjectsV2Request lovr = new ListObjectsV2Request();
-            lovr.setBucketName(bucketName);
-            lovr.setPrefix(prefixPath);
+            lovr.setDelimiter(delimiter);
 
-            String[] delimiters = new String[]
-            { ".pom", "maven-metadata.xml" };
-
-            for (String delimiter : delimiters)
+            for (String prefix : client.listObjectsV2(lovr).getCommonPrefixes())
             {
-                lovr.setDelimiter(delimiter);
-
-                for (String prefix : client.listObjectsV2(lovr).getCommonPrefixes())
+                try
                 {
-                    JavaIndexKey key = this.generateJavaArtifactKey(type, prefixPath, prefix);
-
+                    IndexKey key = st.generateIndexKey(prefixPath, prefix);
+                    
                     if (!indices.contains(key))
                     {
                         indices.add(key);
                     }
                 }
+                catch (IndexException ie)
+                {
+                    logger.error("Could not create key for " + prefixPath + "/" + prefix, ie);
+                }
             }
         }
-
+        
         long end = System.currentTimeMillis();
         logger.info(indices.size() + " Artifacts Indexed under " + getPath() + "/" + uploadPath
                         + " in " + (end - start) + "ms");
@@ -211,32 +215,28 @@ public class S3Storage extends Storage
     }
 
     @Override
-    public void uploadReleaseArtifactStream(IndexArtifact key, StorageRequest sr)
-                    throws StorageException
+    public void uploadReleaseArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException
     {
         uploadArtifactStream(key, sr);
     }
 
     @Override
-    public void uploadSnapshotArtifactStream(IndexArtifact key, StorageRequest sr)
-                    throws StorageException
+    public void uploadSnapshotArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException
     {
         uploadArtifactStream(key, sr);
     }
 
-    private void uploadArtifactStream(IndexArtifact ia, StorageRequest sr)
-                    throws LocalStorageException
+    private void uploadArtifactStream(IndexArtifact ia, StorageRequest sr) throws LocalStorageException
     {
         try
         {
             TransferManager tx = new TransferManager(client);
             ObjectMetadata om = new ObjectMetadata();
-
             om.setContentLength(sr.getLength());
 
-            Upload myUpload = tx.upload(bucketName,
-                            getPath() + ia.getLocation() + "/" + sr.getFilename(), sr.getNewStream(),
-                            om);
+            String key = getPath() + ia.getLocation() + "/" + sr.getFilename();
+            
+            Upload myUpload = tx.upload(bucketName, key, sr.getNewStream(), om);
             myUpload.waitForCompletion();
         }
         catch (Exception exc)
@@ -244,44 +244,5 @@ public class S3Storage extends Storage
             logger.error(exc.getLocalizedMessage());
             throw new LocalStorageException();
         }
-    }
-
-    @Override
-    protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath)
-                    throws LocalStorageException
-    {
-        IndexArtifact ia = new JavaIndexArtifact();
-        String version = key.getVersion().isEmpty() ? "" : "/" + key.getVersion();
-        String location = "/" + uploadPath + "/" + key.getGroup().replace('.', '/') + "/"
-                        + key.getArtifact() + version;
-        ia.setLocation(location);
-
-        return ia;
-    }
-
-    private JavaIndexKey generateJavaArtifactKey(RepositoryType type, String prefixPath,
-                    String sourcePath) throws LocalStorageException
-    {
-        String[] sections = sourcePath.substring(prefixPath.length(), sourcePath.lastIndexOf("/"))
-                        .split("/");
-
-        if (sections.length < 3)
-        {
-            logger.info("[ERROR] Broken Artifact (less than 3 parameters) : " + sourcePath);
-            throw new LocalStorageException();
-        }
-
-        StringBuilder strBuilder = new StringBuilder();
-        for (int i = 0; i < (sections.length - 2); i++)
-        {
-            strBuilder.append(sections[i]);
-            if (i < (sections.length - 3))
-            {
-                strBuilder.append(".");
-            }
-        }
-
-        return new JavaIndexKey(type, strBuilder.toString(), sections[sections.length - 2],
-                        sections[sections.length - 1]);
     }
 }

@@ -3,16 +3,12 @@ package com.spedge.hangar.storage.local;
 import com.google.common.io.ByteStreams;
 
 import com.codahale.metrics.health.HealthCheck;
-
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.repo.java.JavaIndexArtifact;
-import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.Storage;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
-
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -22,11 +18,11 @@ import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
@@ -49,62 +45,28 @@ public class LocalStorage extends Storage
     }
 
     @Override
-    public void initialiseStorage(String uploadPath) throws StorageException
+    public void initialiseStorage(IStorageTranslator st, String uploadPath) throws StorageException
     {
         try
         {
             Path initialDir = fs.getPath(getPath(), uploadPath);
             Files.createDirectories(initialDir);
+            addPathTranslator(st, uploadPath);
         }
         catch (IOException ioe)
         {
             throw new LocalStorageException();
         }
-
-    }
-
-    // From the JavaIndexKey (containing GAV params)
-    // generate the path that it should go into on local storage.
-    @Override
-    protected IndexArtifact generateJavaArtifactPath(JavaIndexKey key, String uploadPath)
-            throws LocalStorageException
-    {
-        IndexArtifact ia = new JavaIndexArtifact();
-        String version = key.getVersion().isEmpty() ? "" : "/" + key.getVersion();
-        String location = "/" + uploadPath + "/" + key.getGroup().replace('.', '/') + "/"
-                + key.getArtifact() + version;
-        ia.setLocation(location);
-
-        try
-        {
-            // Need to generate current state - add which files we have
-            Path sourcePath = fs.getPath(getPath(), ia.getLocation());
-
-            Files.walk(sourcePath).filter(Files::isRegularFile)
-                    .map(e -> e.toString().replace(sourcePath.toString(), ""))
-                    .map(e -> e.substring(e.lastIndexOf(File.separator), e.length()).toString())
-                    .forEach(ia::setStoredFile);
-        }
-        catch (NoSuchFileException nsfe)
-        {
-            logger.info("[LocalStorage] New Artifact : New Path " + ia.getLocation());
-        }
-        catch (IOException ioe)
-        {
-            logger.info(ioe.getMessage());
-            throw new LocalStorageException();
-        }
-
-        return ia;
     }
 
     @Override
-    public List<IndexKey> getArtifactKeys(RepositoryType type, String uploadPath)
-            throws LocalStorageException
+    public List<IndexKey> getArtifactKeys(String uploadPath) throws LocalStorageException
     {
         try
         {
             Path sourcePath = fs.getPath(getPath(), uploadPath);
+            IStorageTranslator st = getStorageTranslator(uploadPath);
+           
             long start = System.currentTimeMillis();
 
             List<IndexKey> paths = Files.walk(sourcePath)
@@ -119,7 +81,7 @@ public class LocalStorage extends Storage
                             + ":"
                             + e.substring(e.lastIndexOf(File.separator), e.length())
                                     .replace(File.separator, ""))
-                    .distinct().map(e -> new IndexKey(type, e)).collect(Collectors.toList());
+                    .distinct().map(e -> new IndexKey(st.getType(), e)).collect(Collectors.toList());
 
             long end = System.currentTimeMillis();
             logger.info(paths.size() + " Artifacts Indexed under " + sourcePath.toString() + " in "
