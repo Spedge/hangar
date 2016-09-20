@@ -8,7 +8,7 @@ import com.spedge.hangar.storage.IStorageTranslator;
 
 public class PythonStorageTranslator implements IStorageTranslator
 {
-    private final String[] delimiters = new String[]{ };
+    private final String[] delimiters = new String[]{};
     private RepositoryType type;
     
     public PythonStorageTranslator(RepositoryType type)

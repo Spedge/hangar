@@ -17,20 +17,28 @@ public class PythonDownloadEndpoint extends PythonRepository
     
     @GET
     @Path("/simple/{artifact : .+}/")
-    public StreamingOutput getArtifact(@PathParam("artifact") String artifact)
+    public StreamingOutput getMetadata(@PathParam("artifact") String artifact)
     {
         return super.getMetadata(proxies, "/simple/" + artifact);       
     }
     
     @GET
     @Path("/packages/{base1 : .+}/{base2 : .+}/{baseMax : .+}/{artifact : .+}")
-    public StreamingOutput getPackage(@PathParam("base1") String base1,
-                                      @PathParam("base2") String base2,
-                                      @PathParam("baseMax") String baseMax,
-                                      @PathParam("artifact") String artifact)
+    public StreamingOutput getRemotePackage(@PathParam("base1") String base1,
+                                            @PathParam("base2") String base2,
+                                            @PathParam("baseMax") String baseMax,
+                                            @PathParam("artifact") String artifact)
     {
-        PythonIndexKey pk = new PythonIndexKey(getType(), base1, base2, baseMax, artifact);
-        return super.getProxiedArtifact(proxies, "/packages" + pk.getPath(), pk);       
+        return super.getProxiedArtifact(proxies, "/packages/" + base1 + "/" + base2 + "/" + baseMax + "/", artifact);       
+    }
+    
+    @GET
+    @Path("/local/{artifact : .+}/{filename : .+}")
+    public StreamingOutput getLocalPackage(@PathParam("artifact") String artifact,
+                                           @PathParam("filename") String filename)
+    {
+        PythonIndexKey pk = new PythonIndexKey(getType(), artifact, filename);
+        return super.getLocalArtifact(proxies, pk);       
     }
 
     public String[] getProxy()

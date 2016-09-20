@@ -5,26 +5,20 @@ import com.spedge.hangar.repo.RepositoryType;
 
 public class PythonIndexKey extends IndexKey
 {
-    private String base1;
-    private String base2;
-    private String baseMax;
     private String artifact;
+    private String filename;
     
     /**
      * Saves the main details for identifying a package within Pip.
      * @param type RepositoryType this index item is from
-     * @param base1 Base1 of the URL
-     * @param base2 Base2 of the URL
-     * @param baseMax Big chunk of UUID
      * @param artifact Name of the artifact
+     * @param filename Name of the actual file being served
      */
-    public PythonIndexKey(RepositoryType type, String base1, String base2, String baseMax, String artifact)
+    public PythonIndexKey(RepositoryType type, String artifact, String filename)
     {
         super(type, artifact);
         this.artifact = artifact;
-        this.base1 = base1;
-        this.base2 = base2;
-        this.baseMax = baseMax;
+        this.filename = filename;
     }
 
     public String getArtifact()
@@ -34,6 +28,6 @@ public class PythonIndexKey extends IndexKey
 
     public String getPath()
     {
-        return "/" + base1 + "/" + base2 + "/" + baseMax + "/" + artifact;
+        return "/" + artifact + "/" + filename;
     }
 }

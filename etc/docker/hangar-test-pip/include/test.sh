@@ -45,5 +45,6 @@ function test_execution()
 
 # Scenario 1 - Simple Requirements
 printf 'Scenario 1 - Package Snapshot...' 
-test_execution pip install -r ./project-1/requirements.txt -i http://$HANGAR_IP:$HANGAR_PORT/python/simple --trusted-host $HANGAR_IP:$HANGAR_PORT
+
+test_execution pip install -vvv -r ./project-1/requirements.txt -i http://$HANGAR_IP:$HANGAR_PORT/python/simple --trusted-host $HANGAR_IP
 printf "\n---- System Tests\n"

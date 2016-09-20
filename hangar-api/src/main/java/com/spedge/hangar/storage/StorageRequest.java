@@ -99,4 +99,10 @@ public class StorageRequest
             return new StorageRequest(this);
         }
     }
+    
+    @Override
+    public String toString()
+    {
+        return new String(stream);
+    }
 }
