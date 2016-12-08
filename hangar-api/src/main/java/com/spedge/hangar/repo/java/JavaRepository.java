@@ -123,7 +123,7 @@ public abstract class JavaRepository extends RepositoryBase
 
             return ia;
         }
-        catch (StorageException se)
+        catch (IndexException | StorageException se)
         {
             throw new InternalServerErrorException();
         }

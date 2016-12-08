@@ -12,8 +12,8 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaIndexArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
@@ -35,8 +35,7 @@ public class TestStorage implements IStorage
 	}
 
 	public IndexArtifact generateArtifactPath(JavaIndexKey key) {
-		JavaIndexArtifact ia = new JavaIndexArtifact();
-		ia.setLocation(key.toString());
+		JavaIndexArtifact ia = new JavaIndexArtifact(key.toString());
 		return ia;
 	}
 
@@ -68,10 +67,9 @@ public class TestStorage implements IStorage
 	public List<IndexKey> getArtifactKeys(String uploadPath) throws StorageException { return new ArrayList<IndexKey>(); }
 
 	@Override
-	public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws StorageException 
+	public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws IndexException 
 	{ 
-		IndexArtifact ia = new JavaIndexArtifact();
-		ia.setLocation("fakestorage");
+		IndexArtifact ia = new JavaIndexArtifact("fakestorage");
 		return ia;
 	}
 
@@ -80,5 +78,19 @@ public class TestStorage implements IStorage
     {
         // TODO Auto-generated method stub
         
+    }
+
+    @Override
+    public IStorageTranslator getStorageTranslator(String prefixPath)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getPath()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

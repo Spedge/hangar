@@ -8,4 +8,9 @@ public class IndexException extends Exception
     {
         super(ie);
     }
+
+    public IndexException(String message)
+    {
+        super(message);
+    }
 }

@@ -12,7 +12,7 @@ public class TestJavaIndexArtifact {
 	@Test
 	public void testFileTypes()
 	{
-		JavaIndexArtifact jia = new JavaIndexArtifact();
+		JavaIndexArtifact jia = new JavaIndexArtifact("");
 		
 		Map<String, Boolean> types = jia.getFileTypes();
 		assertFalse(types.get("jar"));
@@ -26,7 +26,7 @@ public class TestJavaIndexArtifact {
 	@Test
 	public void testStored()
 	{
-		JavaIndexArtifact jia = new JavaIndexArtifact();
+		JavaIndexArtifact jia = new JavaIndexArtifact("");
 
 		jia.setStoredFile("jar");
 		assertTrue(jia.isStoredFile("jar"));

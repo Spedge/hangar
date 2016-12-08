@@ -5,7 +5,6 @@ import java.util.Map;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.jsoup.Jsoup;
@@ -16,6 +15,7 @@ import org.jsoup.select.Elements;
 import com.codahale.metrics.health.HealthCheck;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexException;
+import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryBase;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.storage.StorageException;
@@ -38,13 +38,14 @@ public abstract class PythonRepository extends RepositoryBase
     public StreamingOutput getMetadata(String[] proxies, String path)
     {
         // This should probably be requested from the index rather than PyPi
-        StorageRequest sr = super.requestProxiedArtifact(proxies, path, "");
+        StorageRequest sr = super.requestProxiedArtifact(proxies, "/simple/" + path, "");
         
         // For each anchor entry, we want to replace any entries we have locally. 
         Document doc = Jsoup.parse(sr.toString());
         doc.outputSettings().prettyPrint(false);
         Elements links = doc.select("a");
         
+        boolean rebuild = false;
         for (Element link : links)  
         {
             try
@@ -52,6 +53,7 @@ public abstract class PythonRepository extends RepositoryBase
                 if(getIndex().isArtifact(new PythonIndexKey(RepositoryType.PROXY_PYTHON, path, link.text())))
                 {
                     link.attr("href", "../../local/" + path + link.text());
+                    rebuild = true;
                 }
             }
             catch (IndexException ie)
@@ -60,18 +62,32 @@ public abstract class PythonRepository extends RepositoryBase
             }
         }
         
-        byte[] bytearray = doc.toString().getBytes();
-        sr = new StorageRequest.StorageRequestBuilder().stream(bytearray).filename("").build();
+        // No point doing this if we didn't change anything.
+        if(rebuild)
+        {
+            byte[] bytearray = doc.toString().getBytes();
+            sr = new StorageRequest.StorageRequestBuilder().stream(bytearray).filename("").build();
+        }
         
         return sr.getStreamingOutput();
     }
 
     public StreamingOutput getProxiedArtifact(String[] proxies, String path, String artifact)
     {
-        StorageRequest sr = super.requestProxiedArtifact(proxies, path + artifact, "");
+        StorageRequest sr = super.requestProxiedArtifact(proxies, path + artifact, artifact);
         
+        // Artifact needs to be the "package" name, not the filename.
+        IndexKey pk;
+        try
+        {
+            pk = getStorage().getStorageTranslator(getPath()).generateIndexKey(artifact, sr.getFilename());
+        }
+        catch (IndexException e)
+        {
+            throw new InternalServerErrorException();
+        }
         
-        //addArtifactToStorage(key, sr);
+        addArtifactToStorage(pk, sr);
         return sr.getStreamingOutput();
     }
     
@@ -80,16 +96,8 @@ public abstract class PythonRepository extends RepositoryBase
         // TODO Auto-generated method stub
         return null;
     }
-    
-    protected Response addArtifact(PythonIndexKey key, StorageRequest sr)
-    {
-        // If we simply have an artifact to add that has no effect on the index,
-        // go ahead and get it done.
-        addArtifactToStorage(key, sr);
-        return Response.ok().build();
-    }
-    
-    protected IndexArtifact addArtifactToStorage(PythonIndexKey key, StorageRequest sr)
+        
+    protected IndexArtifact addArtifactToStorage(IndexKey key, StorageRequest sr)
     {
         // Artifacts are uploaded, but for them to become live they need
         // metadata uploaded.
@@ -105,14 +113,9 @@ public abstract class PythonRepository extends RepositoryBase
 
             return ia;
         }
-        catch (StorageException se)
+        catch (StorageException | IndexException se)
         {
             throw new InternalServerErrorException();
         }
     }
-
-
-
-    
-
 }

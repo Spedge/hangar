@@ -1,20 +1,25 @@
 package com.spedge.hangar.index.memory;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.index.ReservedArtifact;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class InMemoryIndex implements IIndex
 {
     private Map<String, IndexArtifact> index;
+    protected final Logger logger = LoggerFactory.getLogger(InMemoryIndex.class);
 
     public InMemoryIndex()
     {
@@ -62,14 +67,21 @@ public class InMemoryIndex implements IIndex
     {
         for (IndexKey key : storage.getArtifactKeys(uploadPath))
         {
-            index.put(key.toString(), storage.getIndexArtifact(key, uploadPath));
+            try
+            {
+                index.put(key.toString(), storage.getIndexArtifact(key, uploadPath));
+            }
+            catch (IndexException ie)
+            {
+                logger.error("Could not parse artifact at " + uploadPath + "/" + key.toString());
+            }
         }
     }
 
     @Override
     public ReservedArtifact addReservationKey(IndexKey key)
     {
-        ReservedArtifact reservation = new ReservedArtifact();
+        ReservedArtifact reservation = new ReservedArtifact(key.toString());
         index.put(key.toString(), reservation);
         return reservation;
     }

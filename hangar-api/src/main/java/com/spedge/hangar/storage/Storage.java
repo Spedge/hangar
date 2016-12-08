@@ -1,15 +1,16 @@
 package com.spedge.hangar.storage;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.storage.local.LocalStorageException;
+import java.io.IOException;
+import java.util.HashMap;
+
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.HashMap;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexException;
+import com.spedge.hangar.index.IndexKey;
 
 public abstract class Storage implements IStorage
 {
@@ -36,13 +37,13 @@ public abstract class Storage implements IStorage
         paths.put(path, st);
     }
     
-    protected IStorageTranslator getStorageTranslator(String prefixPath)
+    public IStorageTranslator getStorageTranslator(String prefixPath)
     {
         return paths.get(prefixPath);
     }
 
     @Override
-    public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws LocalStorageException
+    public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws IndexException
     {
         IStorageTranslator st = paths.get(uploadPath);
         return st.generateIndexArtifact(key, uploadPath);

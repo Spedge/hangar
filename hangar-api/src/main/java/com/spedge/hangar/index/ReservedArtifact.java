@@ -11,8 +11,9 @@ public class ReservedArtifact extends IndexArtifact
     private final UUID id;
     private Map<String, Boolean> files = new HashMap<String, Boolean>();
 
-    public ReservedArtifact()
+    public ReservedArtifact(String location)
     {
+        super(location);
         id = UUID.randomUUID();
     }
 

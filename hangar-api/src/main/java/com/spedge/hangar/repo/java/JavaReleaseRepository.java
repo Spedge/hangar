@@ -38,7 +38,7 @@ public abstract class JavaReleaseRepository extends JavaRepository
             getIndex().addArtifact(releaseKey, releaseIa);
             return Response.ok().build();
         }
-        catch (StorageException | IndexException | IOException ie)
+        catch (IndexException | IOException ie)
         {
             return Response.status(HttpStatus.INTERNAL_SERVER_ERROR_500).build();
         }

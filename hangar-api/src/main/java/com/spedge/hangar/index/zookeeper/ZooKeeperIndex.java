@@ -148,7 +148,7 @@ public class ZooKeeperIndex implements IIndex
     @Override
     public ReservedArtifact addReservationKey(IndexKey key) throws IndexException
     {
-        ReservedArtifact reservation = new ReservedArtifact();
+        ReservedArtifact reservation = new ReservedArtifact(convertPath(key));
 
         try
         {

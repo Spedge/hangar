@@ -16,9 +16,9 @@ public class PythonIndexKey extends IndexKey
      */
     public PythonIndexKey(RepositoryType type, String artifact, String filename)
     {
-        super(type, artifact);
-        this.artifact = artifact;
-        this.filename = filename;
+        super(type, artifact.toLowerCase() + ":" + filename.toLowerCase());
+        this.artifact = artifact.toLowerCase();
+        this.filename = filename.toLowerCase();
     }
 
     public String getArtifact()

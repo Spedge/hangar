@@ -1,17 +1,5 @@
 package com.spedge.hangar.storage.local;
 
-import com.google.common.io.ByteStreams;
-
-import com.codahale.metrics.health.HealthCheck;
-import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.storage.IStorageTranslator;
-import com.spedge.hangar.storage.Storage;
-import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.StorageRequest;
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,11 +9,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
+
+import com.codahale.metrics.health.HealthCheck;
+import com.google.common.io.ByteStreams;
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexKey;
+import com.spedge.hangar.storage.IStorageTranslator;
+import com.spedge.hangar.storage.Storage;
+import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.StorageRequest;
 
 public class LocalStorage extends Storage
 {
@@ -55,49 +51,23 @@ public class LocalStorage extends Storage
         }
         catch (IOException ioe)
         {
-            throw new LocalStorageException();
+            throw new LocalStorageException(ioe);
         }
     }
 
     @Override
     public List<IndexKey> getArtifactKeys(String uploadPath) throws LocalStorageException
     {
-        try
-        {
-            Path sourcePath = fs.getPath(getPath(), uploadPath);
-            IStorageTranslator st = getStorageTranslator(uploadPath);
-           
-            long start = System.currentTimeMillis();
+        Path sourcePath = fs.getPath(getPath(), uploadPath);
+        IStorageTranslator st = getStorageTranslator(uploadPath);
+       
+        long start = System.currentTimeMillis();
+        List<IndexKey> paths = st.getLocalStorageKeys(sourcePath);
 
-            List<IndexKey> paths = Files.walk(sourcePath)
-                    .filter(Files::isRegularFile).map(
-                        e -> e.toString().replace(sourcePath.toString(), ""))
-                    .map(e -> e.subSequence(0, e.lastIndexOf(File.separator)).toString())
-                    .map(e -> e.substring(1, StringUtils.lastOrdinalIndexOf(e, File.separator, 2))
-                            .replace(File.separator, ".")
-                            + ":"
-                            + e.substring(StringUtils.lastOrdinalIndexOf(e, File.separator, 2),
-                                    e.lastIndexOf(File.separator)).replace(File.separator, "")
-                            + ":"
-                            + e.substring(e.lastIndexOf(File.separator), e.length())
-                                    .replace(File.separator, ""))
-                    .distinct().map(e -> new IndexKey(st.getType(), e)).collect(Collectors.toList());
-
-            long end = System.currentTimeMillis();
-            logger.info(paths.size() + " Artifacts Indexed under " + sourcePath.toString() + " in "
-                    + (end - start) + "ms");
-            return paths;
-        }
-        catch (IOException ioe)
-        {
-            logger.info(ioe.getMessage());
-            throw new LocalStorageException();
-        }
-        catch (Exception iee)
-        {
-            logger.info(iee.getMessage());
-            throw new LocalStorageException();
-        }
+        long end = System.currentTimeMillis();
+        logger.info(paths.size() + " Artifacts Indexed under " + sourcePath.toString() + " in "
+                + (end - start) + "ms");
+        return paths;
     }
 
     @Override
@@ -152,7 +122,7 @@ public class LocalStorage extends Storage
         catch (IOException ioe)
         {
             logger.error(ioe.getLocalizedMessage());
-            throw new LocalStorageException();
+            throw new LocalStorageException(ioe);
         }
     }
 

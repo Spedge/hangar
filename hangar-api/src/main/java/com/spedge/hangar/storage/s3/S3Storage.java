@@ -1,6 +1,14 @@
 package com.spedge.hangar.storage.s3;
 
-import com.google.common.io.ByteStreams;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -21,7 +29,7 @@ import com.amazonaws.services.securitytoken.model.GetSessionTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetSessionTokenResult;
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.google.common.io.ByteStreams;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
@@ -30,16 +38,6 @@ import com.spedge.hangar.storage.Storage;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
 import com.spedge.hangar.storage.local.LocalStorageException;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.StreamingOutput;
 
 public class S3Storage extends Storage
 {
@@ -141,14 +139,14 @@ public class S3Storage extends Storage
         }
         
         // Finally, we register this path with the PathTranslators
-        addPathTranslator(st, getPath() + "/" + uploadPath + "/");
+        addPathTranslator(st, uploadPath);
     }
 
     @Override
     public List<IndexKey> getArtifactKeys(String uploadPath) throws StorageException
     {
         String prefixPath = getPath() + "/" + uploadPath + "/";
-        IStorageTranslator st = getStorageTranslator(prefixPath);
+        IStorageTranslator st = getStorageTranslator(uploadPath);
         
         // Create a list for the index keys and start the timer.
         List<IndexKey> indices = new ArrayList<IndexKey>();
@@ -163,11 +161,11 @@ public class S3Storage extends Storage
         {
             lovr.setDelimiter(delimiter);
 
-            for (String prefix : client.listObjectsV2(lovr).getCommonPrefixes())
+            for (String file : client.listObjectsV2(lovr).getCommonPrefixes())
             {
                 try
                 {
-                    IndexKey key = st.generateIndexKey(prefixPath, prefix);
+                    IndexKey key = st.generateIndexKey(file, prefixPath);
                     
                     if (!indices.contains(key))
                     {
@@ -176,7 +174,7 @@ public class S3Storage extends Storage
                 }
                 catch (IndexException ie)
                 {
-                    logger.error("Could not create key for " + prefixPath + "/" + prefix, ie);
+                    logger.error("Could not create key for " + prefixPath + "/" + file, ie);
                 }
             }
         }
@@ -242,7 +240,7 @@ public class S3Storage extends Storage
         catch (Exception exc)
         {
             logger.error(exc.getLocalizedMessage());
-            throw new LocalStorageException();
+            throw new LocalStorageException(exc);
         }
     }
 }

@@ -32,8 +32,7 @@ public enum IndexUtils
 	
 	private static IndexArtifact generateArtifact(String location)
 	{
-		IndexArtifact ia = new JavaIndexArtifact();
-		ia.setLocation(location);
+		IndexArtifact ia = new JavaIndexArtifact(location);
 		return ia;
 	}
 }

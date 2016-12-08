@@ -9,9 +9,9 @@ public class TestReservedArtifact
     @Test
     public void testEqualsAndHashCode() 
     {
-        ReservedArtifact ra = new ReservedArtifact();
-        EqualsTester<ReservedArtifact> equalsTester = EqualsTester.newInstance(new ReservedArtifact());
+        ReservedArtifact ra = new ReservedArtifact("");
+        EqualsTester<ReservedArtifact> equalsTester = EqualsTester.newInstance(new ReservedArtifact(""));
         equalsTester.assertEqual( ra, ra );
-        equalsTester.assertNotEqual( ra, new ReservedArtifact() );
+        equalsTester.assertNotEqual( ra, new ReservedArtifact("") );
     }
 }

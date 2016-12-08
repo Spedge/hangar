@@ -1,14 +1,23 @@
 package com.spedge.hangar.repo.java;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorageTranslator;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.spedge.hangar.storage.local.LocalStorageException;
 
 public class JavaStorageTranslator implements IStorageTranslator
 {
@@ -43,7 +52,7 @@ public class JavaStorageTranslator implements IStorageTranslator
         if (sections.length < 3)
         {
             logger.info("[ERROR] Broken Artifact (less than 3 parameters) : " + sourcePath);
-            throw new IndexException(null);
+            throw new IndexException("Broken Artifact (less than 3 parameters) : " + sourcePath);
         }
 
         StringBuilder strBuilder = new StringBuilder();
@@ -64,7 +73,6 @@ public class JavaStorageTranslator implements IStorageTranslator
     @Override
     public IndexArtifact generateIndexArtifact(IndexKey key, String uploadPath)
     {
-        IndexArtifact ia = new JavaIndexArtifact();
         JavaIndexKey jik;
         
         if (key instanceof JavaIndexKey)
@@ -84,9 +92,36 @@ public class JavaStorageTranslator implements IStorageTranslator
         String location = "/" + uploadPath + "/" + jik.getGroup().replace('.', '/') + "/"
                         + jik.getArtifact() + version;
         
-        ia.setLocation(location);
+        IndexArtifact ia = new JavaIndexArtifact(location);
         
         return ia;
+    }
+
+    @Override
+    public List<IndexKey> getLocalStorageKeys(Path sourcePath) throws LocalStorageException
+    {
+        List<IndexKey> paths;
+        try
+        {
+            paths = Files.walk(sourcePath)
+                         .filter(Files::isRegularFile).map(e -> e.toString().replace(sourcePath.toString(), ""))
+                         .map(e -> e.subSequence(0, e.lastIndexOf(File.separator)).toString())
+                         .map(e -> e.substring(1, StringUtils.lastOrdinalIndexOf(e, File.separator, 2))
+                                    .replace(File.separator, ".")
+                                    + ":"
+                                    + e.substring(StringUtils.lastOrdinalIndexOf(e, File.separator, 2),
+                                      e.lastIndexOf(File.separator)).replace(File.separator, "")
+                                    + ":"
+                                    + e.substring(e.lastIndexOf(File.separator), e.length())
+                                       .replace(File.separator, ""))
+                        .distinct().map(e -> new IndexKey(getType(), e)).collect(Collectors.toList());
+        }
+        catch (IOException ioe)
+        {
+            throw new LocalStorageException(ioe);
+        }
+        
+        return paths;
     }
 
 }

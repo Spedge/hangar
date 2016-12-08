@@ -4,6 +4,7 @@ import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.storage.local.LocalStorage;
 import com.spedge.hangar.storage.s3.S3Storage;
@@ -23,13 +24,17 @@ public interface IStorage
     
     HealthCheck getHealthcheck();
 
+    IStorageTranslator getStorageTranslator(String prefixPath);
+    
     List<IndexKey> getArtifactKeys(String uploadPath) throws StorageException;
 
     StreamingOutput getArtifactStream(IndexArtifact key, String filename);
     
-    IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws StorageException;
+    IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws IndexException;
 
     void uploadReleaseArtifactStream(IndexArtifact ia, StorageRequest sr) throws StorageException;
 
     void uploadSnapshotArtifactStream(IndexArtifact ia, StorageRequest sr) throws StorageException;
+    
+    String getPath();
 }

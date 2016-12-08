@@ -25,9 +25,12 @@ public class JavaIndexArtifact extends IndexArtifact
 
     /**
      * Creates a default Java Artifact for the Index layer.
+     * @param location Location of where the artifact is stored.
      */
-    public JavaIndexArtifact()
+    public JavaIndexArtifact(String location)
     {
+        super(location);
+        
         fileTypes = new HashMap<String, Boolean>();
         fileTypes.put("jar", false);
         fileTypes.put("jar.sha1", false);

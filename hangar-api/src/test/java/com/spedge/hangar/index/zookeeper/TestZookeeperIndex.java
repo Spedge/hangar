@@ -70,7 +70,7 @@ public class TestZookeeperIndex
 			// Attempt to update a reserved artifact with an incorrect reserved token!
 			try
 			{
-				index.addReservedArtifact(IndexUtils.TEST2.getKey(), new ReservedArtifact(), IndexUtils.TEST2.getArtifact());
+				index.addReservedArtifact(IndexUtils.TEST2.getKey(), new ReservedArtifact(""), IndexUtils.TEST2.getArtifact());
 				Assert.fail("Reserved Conflict was never triggered.");
 			}
 			catch(IndexConfictException ice){}
