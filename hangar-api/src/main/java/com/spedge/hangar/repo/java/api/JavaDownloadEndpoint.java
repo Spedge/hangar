@@ -3,6 +3,7 @@ package com.spedge.hangar.repo.java.api;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaRepository;
 import com.spedge.hangar.repo.java.JavaStorageTranslator;
+import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorageTranslator;
 
@@ -11,6 +12,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.StreamingOutput;
 
+/**
+ * This is the "Download" Endpoint, used by Maven to download release
+ * artifacts that should exist. 
+ * 
+ * @author Spedge
+ *
+ */
 public class JavaDownloadEndpoint extends JavaRepository
 {
     private RepositoryType repositoryType = RepositoryType.PROXY_JAVA;
@@ -18,7 +26,7 @@ public class JavaDownloadEndpoint extends JavaRepository
 
     /**
      * This allows us to download the top level metadata - which won't have a version. 
-     * Example Path : /com/spedge/hangar-artifact/maven-metadata.xml
+     * Example Path : /java/com/spedge/hangar-artifact/maven-metadata.xml
      * 
      * @param group Group of Metadata
      * @param artifact Artifact of Metadata
@@ -31,7 +39,9 @@ public class JavaDownloadEndpoint extends JavaRepository
                                                @PathParam("artifact") String artifact, 
                                                @PathParam("type") String type)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
+        JavaGroup jg = JavaGroup.slashDelimited(group);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, "metadata");
+        
         return getArtifact(key, "maven-metadata.xml" + type);
     }
     
@@ -39,7 +49,7 @@ public class JavaDownloadEndpoint extends JavaRepository
      * <p>This allows us to download the snapshot metadata which allows us to determine
      * the latest version of the snapshot.
      * 
-     * Example Path : /com/spedge/hangar-artifact/1.0.0-SNAPSHOT/maven-metadata.xml</p>
+     * Example Path : /java/com/spedge/hangar-artifact/1.0.0-SNAPSHOT/maven-metadata.xml</p>
      * 
      * @param group Group of Metadata
      * @param artifact Artifact of Metadata
@@ -54,13 +64,20 @@ public class JavaDownloadEndpoint extends JavaRepository
                                        @PathParam("version") String version,
                                        @PathParam("type") String type)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
+        JavaGroup jg = JavaGroup.slashDelimited(group);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
+        
         return getArtifact(key, "maven-metadata.xml" + type);
     }
     
     /**
-     * Retrieves an Artifact from storage
-     * Example Path : /java/com/spedge/hangar-artifact/1.0.0/hangar-artifact-1.0.0.jar
+     * Retrieves an Artifact from storage.
+     * 
+     * <p>This is the main endpoint for retrieving artifacts from storage.
+     * The path starts at the root (/java) and goes straight into the group - there is no release
+     * or snapshot path defined.</p>
+     * 
+     * <p>Example Path : /java/com/spedge/hangar-artifact/1.0.0/hangar-artifact-1.0.0.jar</p>
      * 
      * @param group Group of the Artifact
      * @param version Version of the Artifact
@@ -75,9 +92,10 @@ public class JavaDownloadEndpoint extends JavaRepository
                                        @PathParam("artifact") String artifact,
                                        @PathParam("filename") String filename)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, version);
-        return super.getProxiedArtifact(proxies, key, filename);
+        JavaGroup jg = JavaGroup.slashDelimited(group);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
         
+        return super.getProxiedArtifact(proxies, key, filename);
     }
 
     public String[] getProxy()

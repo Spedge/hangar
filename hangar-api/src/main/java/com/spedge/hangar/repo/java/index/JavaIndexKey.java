@@ -2,12 +2,13 @@ package com.spedge.hangar.repo.java.index;
 
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.base.JavaGroup;
 
 import java.util.Objects;
 
 public class JavaIndexKey extends IndexKey
 {
-    private String group = "";
+    private JavaGroup group;
     private String artifact = "";
     private String version = "";
 
@@ -20,7 +21,7 @@ public class JavaIndexKey extends IndexKey
      * @param artifact Name of the Artifact
      * @param version Version of the Artifact
      */
-    public JavaIndexKey(RepositoryType type, String group, String artifact, String version)
+    public JavaIndexKey(RepositoryType type, JavaGroup group, String artifact, String version)
     {
         super(type, group + ":" + artifact + ":" + version);
 
@@ -29,7 +30,7 @@ public class JavaIndexKey extends IndexKey
         this.version = version;
     }
 
-    public String getGroup()
+    public JavaGroup getGroup()
     {
         return group;
     }

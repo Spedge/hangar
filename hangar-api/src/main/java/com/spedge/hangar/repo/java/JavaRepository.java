@@ -58,6 +58,8 @@ public abstract class JavaRepository extends RepositoryBase
         {
             try
             {
+                // Let's check if the file exists in our index.
+                // If it doesn't, we tell the requester that it's not found.
                 if (getIndex().isArtifact(key))
                 {
                     return getStorage().getArtifactStream(getIndex().getArtifact(key), filename);
@@ -161,6 +163,15 @@ public abstract class JavaRepository extends RepositoryBase
         }
     }
     
+    /**
+     * Retrieve an artifact, starting with our local artifact store.
+     * If it doesn't exist, prepare a request and retrieve the artifact from storage.
+     * 
+     * @param proxies Array of potential proxy sources
+     * @param key IndexKey for the requested artifact
+     * @param filename The filename of the file requested
+     * @return StreamingOutput of the file
+     */
     public StreamingOutput getProxiedArtifact(String[] proxies, JavaIndexKey key, String filename)
     {
         try
@@ -169,7 +180,7 @@ public abstract class JavaRepository extends RepositoryBase
         }
         catch (NotFoundException nfe)
         {
-            String path = key.getGroup().replace(".", "/") + "/" 
+            String path = key.getGroup().getGroupAsPath() + "/" 
                             + key.getArtifact() + "/" 
                             + key.getVersion() + "/" 
                             + filename;

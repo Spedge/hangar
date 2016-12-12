@@ -1,20 +1,19 @@
 package com.spedge.hangar.repo.java;
 
-import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexConfictException;
-import com.spedge.hangar.index.IndexException;
-import com.spedge.hangar.repo.java.index.JavaIndexKey;
-import com.spedge.hangar.repo.java.metadata.JavaMetadata;
-import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.StorageRequest;
-
-import org.eclipse.jetty.http.HttpStatus;
-
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXB;
+
+import org.eclipse.jetty.http.HttpStatus;
+
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexException;
+import com.spedge.hangar.repo.java.index.JavaIndexKey;
+import com.spedge.hangar.repo.java.metadata.JavaMetadata;
+import com.spedge.hangar.storage.StorageRequest;
 
 public abstract class JavaReleaseRepository extends JavaRepository
 {

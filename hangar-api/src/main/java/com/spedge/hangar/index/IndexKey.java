@@ -2,8 +2,6 @@ package com.spedge.hangar.index;
 
 import com.spedge.hangar.repo.RepositoryType;
 
-import java.util.Objects;
-
 public class IndexKey
 {
     private String key;
@@ -29,35 +27,54 @@ public class IndexKey
     {
         return type.getLanguage() + ":" + key;
     }
-    
-    @Override
-    public boolean equals(Object object)
-    {
-        // self check
-        if (this == object) 
-        {
-            return true;
-        }
-        // null check
-        if (object == null)
-        {
-            return false;
-        }
-        // type check and cast
-        if (getClass() != object.getClass())
-        {
-            return false;
-        }
-        
-        IndexKey ik = (IndexKey) object;
-        
-        return Objects.equals(toString(), ik.toString()) 
-            && Objects.equals(getType().getLanguage(), ik.getType().getLanguage());
-    }
-    
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode()
     {
-        return (int) type.getLanguage().hashCode() + key.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((key == null) ? 0 : key.hashCode());
+        result = prime * result + ((type.getLanguage() == null) ? 0 : type.getLanguage().hashCode());
+        return result;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        IndexKey other = (IndexKey) obj;
+        if (key == null)
+        {
+            if (other.key != null)
+            {
+                return false;
+            }
+        }
+        else if (!key.equals(other.key))
+        {
+            return false;
+        }
+        if (type.getLanguage() != other.type.getLanguage())
+        {
+            return false;
+        }
+        return true;
     }
 }

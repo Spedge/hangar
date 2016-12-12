@@ -4,6 +4,7 @@ import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaReleaseRepository;
 import com.spedge.hangar.repo.java.JavaStorageTranslator;
+import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.StorageRequest;
@@ -46,8 +47,8 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
                                        @PathParam("version") String version,
                                        @PathParam("filename") String filename)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                version);
+        JavaGroup jg = JavaGroup.slashDelimited(group);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
         logger.debug("[Downloading Release] " + key);
 
         return getArtifact(key, filename);
@@ -74,8 +75,8 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
                                    @PathParam("filename") String filename,
                                    InputStream uploadedInputStream)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                version);
+        JavaGroup jg = JavaGroup.slashDelimited(group);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
         logger.debug("[Uploading Release] " + key.toString());
 
         try
@@ -117,8 +118,8 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
                                                @PathParam("artifact") String artifact, 
                                                @PathParam("type") String type)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact,
-                "metadata");
+        JavaGroup jg = JavaGroup.slashDelimited(group);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, "metadata");
         logger.debug("[Downloading Metadata] " + key.toString());
 
         return getArtifact(key, "maven-metadata.xml" + type);
@@ -143,7 +144,8 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
                                            @PathParam("type") String type, 
                                            InputStream uploadedInputStream)
     {
-        JavaIndexKey key = new JavaIndexKey(repositoryType, group.replace('/', '.'), artifact, "metadata");
+        JavaGroup jg = JavaGroup.slashDelimited(group);
+        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, "metadata");
         logger.debug("[Uploading Metadata] " + key.toString());
 
         try

@@ -4,13 +4,14 @@ import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.JavaIndexArtifact;
+import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 
 public enum IndexUtils 
 {	
-	TEST1(new JavaIndexKey(RepositoryType.RELEASE_JAVA, "com.spedge.test", "test-artifact", "0.1.2.3"),
+	TEST1(new JavaIndexKey(RepositoryType.RELEASE_JAVA, JavaGroup.dotDelimited("com.spedge.test"), "test-artifact", "0.1.2.3"),
 		  generateArtifact("/this/is/a/location/")),
-	TEST2(new JavaIndexKey(RepositoryType.RELEASE_JAVA, "com.spedge.test", "test-artifact", "0.1.2.6"),
+	TEST2(new JavaIndexKey(RepositoryType.RELEASE_JAVA, JavaGroup.dotDelimited("com.spedge.test"), "test-artifact", "0.1.2.6"),
 		  generateArtifact("/this/is/another/location/"));
 	
 	private IndexKey key;

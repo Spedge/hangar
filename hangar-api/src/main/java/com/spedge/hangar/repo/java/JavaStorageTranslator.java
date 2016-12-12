@@ -15,6 +15,7 @@ import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
+import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.local.LocalStorageException;
@@ -65,7 +66,7 @@ public class JavaStorageTranslator implements IStorageTranslator
             }
         }
 
-        return new JavaIndexKey(type, strBuilder.toString(), 
+        return new JavaIndexKey(type, JavaGroup.dotDelimited(strBuilder.toString()), 
                                       sections[sections.length - 2],
                                       sections[sections.length - 1]);
     }
@@ -82,14 +83,13 @@ public class JavaStorageTranslator implements IStorageTranslator
         else
         {
             String[] split = key.toPath().split(":");
-            String group = split[0];
             String artifact = (split.length > 1) ? split[1] : "";
             String version = (split.length > 2) ? split[2] : "";
-            jik = new JavaIndexKey(type, group, artifact, version);
+            jik = new JavaIndexKey(type, JavaGroup.dotDelimited(split[0]), artifact, version);
         }
         
         String version = jik.getVersion().isEmpty() ? "" : "/" + jik.getVersion();
-        String location = "/" + uploadPath + "/" + jik.getGroup().replace('.', '/') + "/"
+        String location = "/" + uploadPath + "/" + jik.getGroup().getGroupAsPath() + "/"
                         + jik.getArtifact() + version;
         
         IndexArtifact ia = new JavaIndexArtifact(location);
