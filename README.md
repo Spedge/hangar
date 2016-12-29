@@ -10,8 +10,8 @@ https://xkcd.com/927/
 
 # Linked Repositories
 
-[Spedge/hangar-index](https://github.com/Spedge/hangar-index)
-[Spedge/hangar-gui](https://github.com/Spedge/hangar-gui)
+* [Spedge/hangar-index](https://github.com/Spedge/hangar-index)
+* [Spedge/hangar-gui](https://github.com/Spedge/hangar-gui)
 
 # Architecture
 
