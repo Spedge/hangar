@@ -276,7 +276,7 @@ public abstract class JavaRepository extends RepositoryBase
     		logger.info("[Warning] No checksum found, generated " + checksumWrapper.getType() + " Checksum : " + checksum);
     		
             StorageRequest sr = new StorageRequest.StorageRequestBuilder()
-				                .length(16)
+				                .length(checksum.length())
 				                .stream(checksum.getBytes())
 				                .filename(filename)
 				                .build();
