@@ -1,5 +1,7 @@
 package com.spedge.hangar.repo;
 
+import io.dropwizard.setup.Environment;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -14,6 +16,8 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.http.HttpStatus;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +26,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexException;
-import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageRequest;
-
-import io.dropwizard.setup.Environment;
 
 public abstract class RepositoryBase implements IRepository
 {
@@ -96,13 +97,17 @@ public abstract class RepositoryBase implements IRepository
         try
         {
             for (String source : proxies)
-            {
-                logger.info("[Downloading Proxied Artifact] " + source + path);
-                
+            {               
                 // So the artifact doesn't exist. We try and download it and
                 // save it to disk.
-                Client client = ClientBuilder.newClient();
+            	ClientConfig configuration = new ClientConfig();
+            	configuration = configuration.property(ClientProperties.CONNECT_TIMEOUT, 60000);
+            	configuration = configuration.property(ClientProperties.READ_TIMEOUT, 60000);
+            	
+                Client client = ClientBuilder.newClient(configuration);
                 WebTarget target = client.target(source).path(path);
+                
+                logger.info("[Downloading Proxied Artifact] " + target.getUri());
 
                 Invocation.Builder builder = target.request(MediaType.WILDCARD);
                 Response resp = builder.get();
