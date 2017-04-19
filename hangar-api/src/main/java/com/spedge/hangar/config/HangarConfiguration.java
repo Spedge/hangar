@@ -11,12 +11,14 @@ import java.util.List;
 
 public class HangarConfiguration extends Configuration
 {
-
     @JsonProperty
     private IStorage storage;
 
     @JsonProperty
     private IIndex artifactIndex;
+    
+    @JsonProperty
+    private StartupConfiguration onStartup;
 
     @NotEmpty
     @JsonProperty
@@ -50,5 +52,10 @@ public class HangarConfiguration extends Configuration
     public void setIndex(IIndex index)
     {
         this.artifactIndex = index;
+    }
+
+    public StartupConfiguration getOnStartup()
+    {
+        return onStartup;
     }
 }

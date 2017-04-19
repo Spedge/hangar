@@ -1,6 +1,7 @@
-package com.spedge.hangar.storage;
+package com.spedge.hangar.storage.request;
 
 import com.google.common.io.ByteStreams;
+import com.spedge.hangar.config.ArtifactLanguage;
 
 import org.apache.commons.io.IOUtils;
 
@@ -17,6 +18,8 @@ public class StorageRequest
     private int length;
     private byte[] stream;
     private String filename;
+    private boolean isOverwritable = false;
+    private StorageRequestKey index;
     
     /**
      * Creates a StorageRequest to be used to both store and retrieve data from 
@@ -28,6 +31,8 @@ public class StorageRequest
         this.length = srb.length;
         this.stream = srb.stream;
         this.filename = srb.filename;
+        this.isOverwritable = srb.overwritable;
+        this.index = srb.index;
     }
 
     public int getLength()
@@ -38,6 +43,16 @@ public class StorageRequest
     public String getFilename()
     {
         return filename;
+    }
+    
+    public boolean isOverwritable()
+    {
+        return this.isOverwritable;
+    }
+    
+    public StorageRequestKey getIndex()
+    {
+        return index;
     }
     
     /**
@@ -69,6 +84,8 @@ public class StorageRequest
         private int length;
         private byte[] stream;
         private String filename;
+        private boolean overwritable = false;
+        private StorageRequestKey index;
         
         public StorageRequestBuilder length(int length)
         {
@@ -91,6 +108,18 @@ public class StorageRequest
         public StorageRequestBuilder filename(String filename)
         {
             this.filename = filename;
+            return this;
+        }
+        
+        public StorageRequestBuilder overwritable(boolean overwritable)
+        {
+            this.overwritable = overwritable;
+            return this;            
+        }
+        
+        public StorageRequestBuilder index(ArtifactLanguage language, String delimiter, String key)
+        {
+            this.index = new StorageRequestKey(language, delimiter, key);
             return this;
         }
         

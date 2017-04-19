@@ -6,7 +6,7 @@ import com.spedge.hangar.repo.java.JavaStorageTranslator;
 import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorageTranslator;
-import com.spedge.hangar.storage.StorageRequest;
+import com.spedge.hangar.storage.request.StorageRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,19 +36,19 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
      * @param filename Exact filename required
      * @return StreamingOutput containing the content of the Artifact requested.
      */
-    @GET
-    @Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
-    public StreamingOutput getSnapshotArtifact(@PathParam("group") String group,
-                                               @PathParam("artifact") String artifact, 
-                                               @PathParam("version") String version,
-                                               @PathParam("filename") String filename)
-    {
-        JavaGroup jg = JavaGroup.slashDelimited(group);
-        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
-        logger.debug("[Downloading Snapshot] " + key);
-
-        return getSnapshotArtifact(key, filename);
-    }
+//    @GET
+//    @Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
+//    public StreamingOutput getSnapshotArtifact(@PathParam("group") String group,
+//                                               @PathParam("artifact") String artifact, 
+//                                               @PathParam("version") String version,
+//                                               @PathParam("filename") String filename)
+//    {
+//        JavaGroup jg = JavaGroup.slashDelimited(group);
+//        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
+//        logger.debug("[Downloading Snapshot] " + key);
+//
+//        return getSnapshotArtifact(key, filename);
+//    }
         
     /**
      * Uploads an Snapshot Artifact to storage
@@ -61,35 +61,35 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
      * @param uploadedInputStream Contents of the artifact
      * @return A response with a status code
      */
-    @PUT
-    @Consumes(MediaType.WILDCARD)
-    @Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
-    public Response uploadArtifact(@Context final HttpServletRequest request,
-                                   @PathParam("group") String group, 
-                                   @PathParam("artifact") String artifact,
-                                   @PathParam("version") String version, 
-                                   @PathParam("filename") String filename,
-                                   InputStream uploadedInputStream)
-    {
-        JavaGroup jg = JavaGroup.slashDelimited(group);
-        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
-        logger.debug("[Uploading Snapshot] " + key.toString());
-
-        try
-        {            
-            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
-                                                  .length(request.getContentLength())
-                                                  .stream(uploadedInputStream)
-                                                  .filename(filename)
-                                                  .build();
-            
-            return addArtifact(key, sr);
-        }
-        catch (IOException ioe)
-        {
-            throw new InternalServerErrorException(ioe);
-        }
-    }
+//    @PUT
+//    @Consumes(MediaType.WILDCARD)
+//    @Path("/snapshots/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+-SNAPSHOT}/{filename : [^/]+}")
+//    public Response uploadArtifact(@Context final HttpServletRequest request,
+//                                   @PathParam("group") String group, 
+//                                   @PathParam("artifact") String artifact,
+//                                   @PathParam("version") String version, 
+//                                   @PathParam("filename") String filename,
+//                                   InputStream uploadedInputStream)
+//    {
+//        JavaGroup jg = JavaGroup.slashDelimited(group);
+//        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
+//        logger.debug("[Uploading Snapshot] " + key.toString());
+//
+//        try
+//        {            
+//            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+//                                                  .length(request.getContentLength())
+//                                                  .stream(uploadedInputStream)
+//                                                  .filename(filename)
+//                                                  .build();
+//            
+//            return addArtifact(key, sr);
+//        }
+//        catch (IOException ioe)
+//        {
+//            throw new InternalServerErrorException(ioe);
+//        }
+//    }
 
     /**
      * This allows us to download the top level metadata - which won't have a version. 
@@ -123,41 +123,41 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
      * @param uploadedInputStream Contents of the artifact
      * @return A response with a status code
      */
-    @PUT
-    @Consumes(MediaType.WILDCARD)
-    @Path("/snapshots/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-    public Response uploadTopLevelMetadata(@Context final HttpServletRequest request,
-                                           @PathParam("group") String group,
-                                           @PathParam("artifact") String artifact,
-                                           @PathParam("type") String type, 
-                                           InputStream uploadedInputStream)
-    {
-        JavaGroup jg = JavaGroup.slashDelimited(group);
-        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, "metadata");
-        logger.debug("[Uploading Metadata] " + key.toString());
-
-        try
-        {
-            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
-                            .length(request.getContentLength())
-                            .stream(uploadedInputStream)
-                            .filename("maven-metadata.xml" + type)
-                            .build();
-                        
-            if (!type.isEmpty())
-            {
-                return addArtifact(key, sr);
-            }
-            else
-            {
-                return addMetadata(key, sr);
-            }
-        }
-        catch (IOException ioe)
-        {
-            throw new InternalServerErrorException(ioe);
-        }
-    }
+//    @PUT
+//    @Consumes(MediaType.WILDCARD)
+//    @Path("/snapshots/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+//    public Response uploadTopLevelMetadata(@Context final HttpServletRequest request,
+//                                           @PathParam("group") String group,
+//                                           @PathParam("artifact") String artifact,
+//                                           @PathParam("type") String type, 
+//                                           InputStream uploadedInputStream)
+//    {
+//        JavaGroup jg = JavaGroup.slashDelimited(group);
+//        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, "metadata");
+//        logger.debug("[Uploading Metadata] " + key.toString());
+//
+//        try
+//        {
+//            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+//                            .length(request.getContentLength())
+//                            .stream(uploadedInputStream)
+//                            .filename("maven-metadata.xml" + type)
+//                            .build();
+//                        
+//            if (!type.isEmpty())
+//            {
+//                return addArtifact(key, sr);
+//            }
+//            else
+//            {
+//                return addMetadata(key, sr);
+//            }
+//        }
+//        catch (IOException ioe)
+//        {
+//            throw new InternalServerErrorException(ioe);
+//        }
+//    }
 
     /**
      * <p>This allows us to download the snapshot metadata which allows us to determine
@@ -194,42 +194,42 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
      * @param uploadedInputStream Contents of the artifact
      * @return A response with a status code
      */
-    @PUT
-    @Consumes(MediaType.WILDCARD)
-    @Path("/snapshots/{group : .+}/{artifact : .+}/{version : ([\\d\\.]*\\-SNAPSHOT)+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-    public Response uploadMetadata(@Context final HttpServletRequest request,
-                                   @PathParam("group") String group, 
-                                   @PathParam("artifact") String artifact,
-                                   @PathParam("version") String version, 
-                                   @PathParam("type") String type,
-                                   InputStream uploadedInputStream)
-    {
-        JavaGroup jg = JavaGroup.slashDelimited(group);
-        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
-        logger.debug("[Uploading Metadata] " + key.toString());
-
-        try
-        {
-            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
-                            .length(request.getContentLength())
-                            .stream(uploadedInputStream)
-                            .filename("maven-metadata.xml" + type)
-                            .build();
-    
-            if (!type.isEmpty())
-            {
-                return addArtifact(key, sr);
-            }
-            else
-            {
-                return addSnapshotMetadata(key, sr);
-            }
-        }
-        catch (IOException ioe)
-        {
-            throw new InternalServerErrorException(ioe);
-        }
-    }
+//    @PUT
+//    @Consumes(MediaType.WILDCARD)
+//    @Path("/snapshots/{group : .+}/{artifact : .+}/{version : ([\\d\\.]*\\-SNAPSHOT)+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+//    public Response uploadMetadata(@Context final HttpServletRequest request,
+//                                   @PathParam("group") String group, 
+//                                   @PathParam("artifact") String artifact,
+//                                   @PathParam("version") String version, 
+//                                   @PathParam("type") String type,
+//                                   InputStream uploadedInputStream)
+//    {
+//        JavaGroup jg = JavaGroup.slashDelimited(group);
+//        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
+//        logger.debug("[Uploading Metadata] " + key.toString());
+//
+//        try
+//        {
+//            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+//                            .length(request.getContentLength())
+//                            .stream(uploadedInputStream)
+//                            .filename("maven-metadata.xml" + type)
+//                            .build();
+//    
+//            if (!type.isEmpty())
+//            {
+//                return addArtifact(key, sr);
+//            }
+//            else
+//            {
+//                return addSnapshotMetadata(key, sr);
+//            }
+//        }
+//        catch (IOException ioe)
+//        {
+//            throw new InternalServerErrorException(ioe);
+//        }
+//    }
 
     @Override
     public RepositoryType getType()

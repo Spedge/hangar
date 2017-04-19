@@ -1,51 +1,76 @@
 package com.spedge.hangar.storage;
 
-import java.io.IOException;
-import java.util.HashMap;
-
-import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexException;
-import com.spedge.hangar.index.IndexKey;
 
 public abstract class Storage implements IStorage
 {
     protected final Logger logger = LoggerFactory.getLogger(Storage.class);
-    private HashMap<String, IStorageTranslator> paths = new HashMap<String, IStorageTranslator>();
+    protected boolean isInitalised = false;
+    private StorageConfiguration sc;
     
-    @NotEmpty
-    private String path;
+    /**
+     * Method is called by implementing classes to mark storage as ready.
+     */
+    protected void initialisationComplete()
+    {
+        isInitalised = true;  
+    }
+    
+    /**
+     * Describes if initalisationComplete() has been called on this storage.
+     * @return boolean indicating if storage is implemented.
+     */
+    protected boolean isInitialised()
+    {
+        return this.isInitalised;
+    }
+    
 
-    @JsonProperty
-    public String getPath()
+    @Override
+    public StorageConfiguration getStorageConfiguration()
     {
-        return path;
-    }
-
-    @JsonProperty
-    public void setPath(String path) throws IOException
-    {
-        this.path = path;
-    }
-    
-    protected void addPathTranslator(IStorageTranslator st, String path)
-    {
-        paths.put(path, st);
-    }
-    
-    public IStorageTranslator getStorageTranslator(String prefixPath)
-    {
-        return paths.get(prefixPath);
+        return sc;
     }
 
     @Override
-    public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws IndexException
+    @JsonProperty
+    public void setStorageConfiguration(StorageConfiguration sc)
     {
-        IStorageTranslator st = paths.get(uploadPath);
-        return st.generateIndexArtifact(key, uploadPath);
+        this.sc = sc;
     }
+    
+//    @NotEmpty
+//    private String rootPath;
+//
+//    @JsonProperty
+//    public String getRootPath()
+//    {
+//        return rootPath;
+//    }
+//
+//    @JsonProperty
+//    public void setRootPath(String path) throws IOException
+//    {
+//        this.rootPath = path;
+//    }
+//    
+//    protected void addPathTranslator(IStorageTranslator st, String path)
+//    {
+//        paths.put(path, st);
+//    }
+//    
+//    public IStorageTranslator getStorageTranslator(String prefixPath)
+//    {
+//        return paths.get(prefixPath);
+//    }
+
+//    @Override
+//    public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws IndexException
+//    {
+//        IStorageTranslator st = paths.get(uploadPath);
+//        return st.generateIndexArtifact(key, uploadPath);
+//    }
 }

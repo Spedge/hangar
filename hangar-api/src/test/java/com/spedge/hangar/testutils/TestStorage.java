@@ -18,8 +18,11 @@ import com.spedge.hangar.repo.java.JavaIndexArtifact;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.IStorageTranslator;
+import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.StorageRequest;
+import com.spedge.hangar.storage.StorageInitalisationException;
+import com.spedge.hangar.storage.request.StorageRequest;
+import com.spedge.hangar.storage.request.StorageRequestException;
 
 public class TestStorage implements IStorage 
 {
@@ -63,34 +66,76 @@ public class TestStorage implements IStorage
 		public void write(OutputStream arg0) throws IOException, WebApplicationException {}
 	}
 
-	@Override
-	public List<IndexKey> getArtifactKeys(String uploadPath) throws StorageException { return new ArrayList<IndexKey>(); }
-
-	@Override
-	public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws IndexException 
-	{ 
-		IndexArtifact ia = new JavaIndexArtifact("fakestorage");
-		return ia;
-	}
-
     @Override
-    public void initialiseStorage(IStorageTranslator st, String uploadPath) throws StorageException
+    public void initialiseStorage() throws StorageInitalisationException
     {
         // TODO Auto-generated method stub
         
     }
 
     @Override
-    public IStorageTranslator getStorageTranslator(String prefixPath)
+    public StreamingOutput getArtifactStream(StorageRequest sr) throws StorageRequestException
     {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getPath()
+    public void uploadArtifactStream(StorageRequest sr) throws StorageRequestException
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void removeArtifact(StorageRequest sr) throws StorageRequestException
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public StorageConfiguration getStorageConfiguration()
     {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public void setStorageConfiguration(StorageConfiguration sc)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+//	@Override
+//	public List<IndexKey> getArtifactKeys(String uploadPath) throws StorageException { return new ArrayList<IndexKey>(); }
+//
+//	@Override
+//	public IndexArtifact getIndexArtifact(IndexKey key, String uploadPath) throws IndexException 
+//	{ 
+//		IndexArtifact ia = new JavaIndexArtifact("fakestorage");
+//		return ia;
+//	}
+//
+//    @Override
+//    public void initialiseStorage(IStorageTranslator st, String uploadPath) throws StorageException
+//    {
+//        // TODO Auto-generated method stub
+//        
+//    }
+//
+//    @Override
+//    public IStorageTranslator getStorageTranslator(String prefixPath)
+//    {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//    @Override
+//    public String getPath()
+//    {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
 }

@@ -8,79 +8,91 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.io.ByteStreams;
-import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.Storage;
-import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.StorageRequest;
+import com.spedge.hangar.storage.StorageConfiguration;
+import com.spedge.hangar.storage.StorageInitalisationException;
+import com.spedge.hangar.storage.request.StorageRequest;
+import com.spedge.hangar.storage.request.StorageRequestException;
+import com.spedge.hangar.storage.request.StorageRequestKey;
 
 public class LocalStorage extends Storage
 {
     private HealthCheck check = null;
     private FileSystem fs = FileSystems.getDefault();
-
+    
     /**
-     * Return the LocalStorage healthcheck.
+     * prefixPath is the initial absolute path configured at start-up.
+     * e.g. /data/maven/
      */
-    public HealthCheck getHealthcheck()
-    {
-        if (check == null)
-        {
-            check = new LocalStorageHealthcheck(getPath());
-        }
-        return check;
-    }
-
+    private String rootPath;
+    
+    /*
+     * We want to make sure the root path is there and accessible so that we can save files to it.
+     * 
+     * (non-Javadoc)
+     * @see com.spedge.hangar.storage.IStorage#initialiseStorage(com.spedge.hangar.storage.StorageConfiguration)
+     */
     @Override
-    public void initialiseStorage(IStorageTranslator st, String uploadPath) throws StorageException
+    public void initialiseStorage() throws StorageInitalisationException
     {
+        StorageConfiguration sc = super.getStorageConfiguration();
+        
+        // End the initialised path with a trailing slash if it does not already have one.
+        this.rootPath = sc.getRootPath().endsWith("/") ? sc.getRootPath() : sc.getRootPath() + "/";
+        
+        // Initialise the Healthcheck
+        this.check = new LocalStorageHealthcheck(this.rootPath);
+        
+        // Let's try and create the root directory where these items will go.
         try
         {
-            Path initialDir = fs.getPath(getPath(), uploadPath);
+            Path initialDir = fs.getPath(this.rootPath);
             Files.createDirectories(initialDir);
-            addPathTranslator(st, uploadPath);
         }
         catch (IOException ioe)
         {
-            throw new LocalStorageException(ioe);
+            throw new StorageInitalisationException(ioe);
         }
+         
+        super.initialisationComplete();
     }
-
+    
+    /*
+     * Basic Healthcheck
+     * 
+     * (non-Javadoc)
+     * @see com.spedge.hangar.storage.IStorage#getHealthcheck()
+     */
     @Override
-    public List<IndexKey> getArtifactKeys(String uploadPath) throws LocalStorageException
+    public HealthCheck getHealthcheck()
     {
-        Path sourcePath = fs.getPath(getPath(), uploadPath);
-        IStorageTranslator st = getStorageTranslator(uploadPath);
-       
-        long start = System.currentTimeMillis();
-        List<IndexKey> paths = st.getLocalStorageKeys(sourcePath);
-
-        long end = System.currentTimeMillis();
-        logger.info(paths.size() + " Artifacts Indexed under " + sourcePath.toString() + " in "
-                + (end - start) + "ms");
-        return paths;
+        return check;
     }
-
+    
+    /*
+     * We want to use the StorageRequestIndex and convert it into something we can understand.
+     * Once it's been made into a path, we attempt to read from it - throwing an error if we can't.
+     * 
+     * (non-Javadoc)
+     * @see com.spedge.hangar.storage.IStorage#getArtifactStream(com.spedge.hangar.storage.StorageRequest)
+     */
     @Override
-    public StreamingOutput getArtifactStream(final IndexArtifact artifact, final String filename)
-    {
-        Path streamPath = fs.getPath(getPath() + artifact.getLocation() + "/" + filename);
-
+    public StreamingOutput getArtifactStream(StorageRequest sr) throws StorageRequestException
+    {                       
+        // Determine the location of this artifact on storage according to the index.
+        Path streamPath = this.convertIndex(sr.getIndex());
+        
+        // Check if we can read it - if so, return a stream to the source.
         if (Files.isReadable(streamPath))
         {
             return new StreamingOutput()
             {
-
-                public void write(OutputStream os) throws IOException, WebApplicationException
+                public void write(OutputStream os) throws IOException
                 {
                     FileInputStream fis = new FileInputStream(streamPath.toString());
                     ByteStreams.copy(fis, os);
@@ -90,46 +102,53 @@ public class LocalStorage extends Storage
         }
         else
         {
-            throw new NotFoundException();
+            // If it's not readable, we should throw an exception describing why.
+            throw new StorageRequestException(StorageRequestException.DOES_NOT_EXIST);
         }
     }
-
+    
     @Override
-    public void uploadReleaseArtifactStream(IndexArtifact ia, StorageRequest sr)
-            throws LocalStorageException
+    public void uploadArtifactStream(StorageRequest sr) throws StorageRequestException
     {
-        uploadArtifactStream(ia, sr);
-    }
-
-    @Override
-    public void uploadSnapshotArtifactStream(IndexArtifact ia, StorageRequest sr)
-            throws LocalStorageException
-    {
-        uploadArtifactStream(ia, sr, StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    private void uploadArtifactStream(IndexArtifact ia, StorageRequest sr,
-            StandardCopyOption... options) throws LocalStorageException
-    {
-        Path outputPath = fs.getPath(getPath() + ia.getLocation());
-        Path outputPathArtifact = fs.getPath(getPath() + ia.getLocation() + "/" + sr.getFilename());
+        // Determine the location of this artifact on storage according to the index.
+        Path streamPath = this.convertIndex(sr.getIndex());
+        
+        // If this is considered by the API to be an artifact that can be overwritten, allow it.
+        StandardCopyOption[] options = sr.isOverwritable() 
+                        ? new StandardCopyOption[]{StandardCopyOption.REPLACE_EXISTING} 
+                        : new StandardCopyOption[]{};
 
         try
         {
-            Files.createDirectories(outputPath);
-            Files.copy(sr.getNewStream(), outputPathArtifact, options);
+            // Copy the contents of the stream into the location.
+            Files.createDirectories(streamPath.getParent());
+            Files.copy(sr.getNewStream(), streamPath, options);
         }
         catch (IOException ioe)
         {
+            // This is an unexpected error condition - throw an exception.
             logger.error(ioe.getLocalizedMessage());
-            throw new LocalStorageException(ioe);
+            throw new StorageRequestException(ioe);
         }
     }
-
-    // This is used so we can mock the filesystem
-    // during unit testing.
-    public void setFilesystem(FileSystem fs)
+    
+    /**
+     * Converts a StorageRequestIndex entry into a Path to be used by the LocalStorage layer
+     * 
+     * @param index An entry containing data that we can create a path from.
+     * @return A full path to the location stated in the StorageRequestIndex.
+     */
+    private Path convertIndex(StorageRequestKey index)
     {
-        this.fs = fs;
+        return fs.getPath(this.rootPath + index.getPath());
+    }
+    
+    @Override
+    public void removeArtifact(StorageRequest sr) throws StorageRequestException
+    {
+        // TODO Not sure how we'll do this in the local storage.
+        // I'm tempted to create a /old directory and simply do a move,
+        // then expect that a garbage collection process will remove these when
+        // it's an acceptable time.
     }
 }

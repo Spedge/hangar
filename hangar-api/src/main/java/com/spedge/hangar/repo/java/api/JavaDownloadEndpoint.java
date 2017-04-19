@@ -85,18 +85,18 @@ public class JavaDownloadEndpoint extends JavaRepository
      * @param filename Exact filename required
      * @return StreamingOutput containing the content of the Artifact requested.
      */
-    @GET
-    @Path("/{group : .+}/{artifact : .+}/{version : .+}/{filename : [^/]+}")
-    public StreamingOutput getArtifact(@PathParam("group") String group,
-                                       @PathParam("version") String version,
-                                       @PathParam("artifact") String artifact,
-                                       @PathParam("filename") String filename)
-    {
-        JavaGroup jg = JavaGroup.slashDelimited(group);
-        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
-        
-        return super.getProxiedArtifact(proxies, key, filename);
-    }
+//    @GET
+//    @Path("/{group : .+}/{artifact : .+}/{version : .+}/{filename : [^/]+}")
+//    public StreamingOutput getArtifact(@PathParam("group") String group,
+//                                       @PathParam("version") String version,
+//                                       @PathParam("artifact") String artifact,
+//                                       @PathParam("filename") String filename)
+//    {
+//        JavaGroup jg = JavaGroup.slashDelimited(group);
+//        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
+//        
+//        return super.getProxiedArtifact(proxies, key, filename);
+//    }
 
     public String[] getProxy()
     {

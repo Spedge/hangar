@@ -7,20 +7,20 @@ public class StorageConfiguration
 {
 
     @NotEmpty
-    private String uploadpath;
+    private String rootPath;
 
     @NotEmpty
     private String limit;
 
     @JsonProperty
-    public String getUploadPath()
+    public String getRootPath()
     {
-        return uploadpath;
+        return rootPath;
     }
 
-    public void setUploadPath(String uploadpath)
+    public void setRootPath(String uploadpath)
     {
-        this.uploadpath = uploadpath;
+        this.rootPath = uploadpath;
     }
 
     @JsonProperty

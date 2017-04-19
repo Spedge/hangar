@@ -25,6 +25,13 @@ public class InMemoryIndex implements IIndex
     {
         this.index = new HashMap<String, IndexArtifact>();
     }
+    
+    @Override
+    public void initaliseIndex()
+    {
+        // TODO Auto-generated method stub
+        
+    }
 
     public boolean isArtifact(IndexKey key)
     {
@@ -65,17 +72,17 @@ public class InMemoryIndex implements IIndex
     public void load(RepositoryType type, IStorage storage, String uploadPath)
             throws StorageException
     {
-        for (IndexKey key : storage.getArtifactKeys(uploadPath))
-        {
-            try
-            {
-                index.put(key.toString(), storage.getIndexArtifact(key, uploadPath));
-            }
-            catch (IndexException ie)
-            {
-                logger.error("Could not parse artifact at " + uploadPath + "/" + key.toString());
-            }
-        }
+//        for (IndexKey key : storage.getArtifactKeys(uploadPath))
+//        {
+//            try
+//            {
+//                index.put(key.toString(), storage.getIndexArtifact(key, uploadPath));
+//            }
+//            catch (IndexException ie)
+//            {
+//                logger.error("Could not parse artifact at " + uploadPath + "/" + key.toString());
+//            }
+//        }
     }
 
     @Override

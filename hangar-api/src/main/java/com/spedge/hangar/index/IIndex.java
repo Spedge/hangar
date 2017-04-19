@@ -16,7 +16,11 @@ import com.spedge.hangar.storage.StorageException;
     })
 public interface IIndex
 {
-
+    /**
+     * On start-up, call this method to allow the index to achieve a running state.
+     */
+    void initaliseIndex();
+    
     /**
      * Confirms that this particular artifact is registered
      * @param key IndexKey for Artifact

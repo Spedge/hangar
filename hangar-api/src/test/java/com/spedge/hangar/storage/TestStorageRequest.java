@@ -8,6 +8,8 @@ import java.io.IOException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
+import com.spedge.hangar.storage.request.StorageRequest;
+
 public class TestStorageRequest
 {
     @Test

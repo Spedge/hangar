@@ -121,27 +121,27 @@ public class ZooKeeperIndex implements IIndex
     @Override
     public void load(RepositoryType type, IStorage storage, String uploadPath) throws IndexException
     {
-        try
-        {
-            startClient(this.connectionString);
-
-            for (IndexKey key : storage.getArtifactKeys(uploadPath))
-            {
-                String path = convertPath(key);
-
-                if (client.checkExists().forPath(path) == null)
-                {
-                    client.create().creatingParentsIfNeeded().forPath(path, SerializationUtils
-                            .serialize(storage.getIndexArtifact(key, uploadPath)));
-
-                    logger.info("[ZookeeperIndex] Adding " + path + " to index.");
-                }
-            }
-        }
-        catch (Exception exc)
-        {
-            throw new IndexException(exc);
-        }
+//        try
+//        {
+//            startClient(this.connectionString);
+//
+//            for (IndexKey key : storage.getArtifactKeys(uploadPath))
+//            {
+//                String path = convertPath(key);
+//
+//                if (client.checkExists().forPath(path) == null)
+//                {
+//                    client.create().creatingParentsIfNeeded().forPath(path, SerializationUtils
+//                            .serialize(storage.getIndexArtifact(key, uploadPath)));
+//
+//                    logger.info("[ZookeeperIndex] Adding " + path + " to index.");
+//                }
+//            }
+//        }
+//        catch (Exception exc)
+//        {
+//            throw new IndexException(exc);
+//        }
 
     }
 

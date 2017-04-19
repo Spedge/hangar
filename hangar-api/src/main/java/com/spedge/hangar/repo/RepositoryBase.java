@@ -30,7 +30,7 @@ import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.IStorageTranslator;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.StorageRequest;
+import com.spedge.hangar.storage.request.StorageRequest;
 
 public abstract class RepositoryBase implements IRepository
 {
@@ -55,15 +55,15 @@ public abstract class RepositoryBase implements IRepository
     }
     
     @Override
-    public void loadRepository(HangarConfiguration configuration, Environment environment)
+    public void loadRepository(IStorage storage, IIndex index)
             throws IndexException, StorageException
     {
-        storage = configuration.getStorage();
-        index = configuration.getIndex();
+        this.storage = storage;
+        this.index = index;
 
-        storage.initialiseStorage(getStorageTranslator(), storageConfig.getUploadPath());
+        //storage.initialiseStorage(getStorageTranslator(), storageConfig.getUploadPath());
 
-        index.load(getType(), storage, storageConfig.getUploadPath());
+        //index.load(getType(), storage, storageConfig.getUploadPath());
     }
 
     protected abstract IStorageTranslator getStorageTranslator();
@@ -75,10 +75,7 @@ public abstract class RepositoryBase implements IRepository
 
     public abstract RepositoryType getType();
 
-    public String getPath()
-    {
-        return storageConfig.getUploadPath();
-    }
+    
     
     @Override
     public IStorage getStorage()

@@ -7,7 +7,7 @@ import com.spedge.hangar.repo.java.JavaStorageTranslator;
 import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.storage.IStorageTranslator;
-import com.spedge.hangar.storage.StorageRequest;
+import com.spedge.hangar.storage.request.StorageRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,43 +65,43 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
      * @param uploadedInputStream Contents of the artifact
      * @return A response with a status code
      */
-    @PUT
-    @Consumes(MediaType.WILDCARD)
-    @Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+}/{filename : [^/]+}")
-    public Response uploadArtifact(@Context final HttpServletRequest request,
-                                   @PathParam("group") String group, 
-                                   @PathParam("artifact") String artifact,
-                                   @PathParam("version") String version,
-                                   @PathParam("filename") String filename,
-                                   InputStream uploadedInputStream)
-    {
-        JavaGroup jg = JavaGroup.slashDelimited(group);
-        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
-        logger.debug("[Uploading Release] " + key.toString());
-
-        try
-        {
-            if (getIndex().isArtifact(key))
-            {
-                if (getIndex().getArtifact(key).isStoredFile(filename))
-                {
-                    throw new WebApplicationException(Status.CONFLICT);
-                }
-            }
-            
-            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
-                            .length(request.getContentLength())
-                            .stream(uploadedInputStream)
-                            .filename(filename)
-                            .build();
-            
-            return addArtifact(key, sr);
-        }
-        catch (IndexException | IOException exc)
-        {
-            throw new InternalServerErrorException(exc);
-        }       
-    }
+//    @PUT
+//    @Consumes(MediaType.WILDCARD)
+//    @Path("/releases/{group : .+}/{artifact : .+}/{version : (?i)[\\d\\.]+}/{filename : [^/]+}")
+//    public Response uploadArtifact(@Context final HttpServletRequest request,
+//                                   @PathParam("group") String group, 
+//                                   @PathParam("artifact") String artifact,
+//                                   @PathParam("version") String version,
+//                                   @PathParam("filename") String filename,
+//                                   InputStream uploadedInputStream)
+//    {
+//        JavaGroup jg = JavaGroup.slashDelimited(group);
+//        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, version);
+//        logger.debug("[Uploading Release] " + key.toString());
+//
+//        try
+//        {
+//            if (getIndex().isArtifact(key))
+//            {
+//                if (getIndex().getArtifact(key).isStoredFile(filename))
+//                {
+//                    throw new WebApplicationException(Status.CONFLICT);
+//                }
+//            }
+//            
+//            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+//                            .length(request.getContentLength())
+//                            .stream(uploadedInputStream)
+//                            .filename(filename)
+//                            .build();
+//            
+//            return addArtifact(key, sr);
+//        }
+//        catch (IndexException | IOException exc)
+//        {
+//            throw new InternalServerErrorException(exc);
+//        }       
+//    }
 
     /**
      * This allows us to download the top level metadata - which won't have a version. 
@@ -135,41 +135,41 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
      * @param uploadedInputStream Contents of the artifact
      * @return A response with a status code
      */
-    @PUT
-    @Consumes(MediaType.WILDCARD)
-    @Path("/releases/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
-    public Response uploadTopLevelMetadata(@Context final HttpServletRequest request,
-                                           @PathParam("group") String group, 
-                                           @PathParam("artifact") String artifact,
-                                           @PathParam("type") String type, 
-                                           InputStream uploadedInputStream)
-    {
-        JavaGroup jg = JavaGroup.slashDelimited(group);
-        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, "metadata");
-        logger.debug("[Uploading Metadata] " + key.toString());
-
-        try
-        {
-            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
-                                                  .length(request.getContentLength())
-                                                  .stream(uploadedInputStream)
-                                                  .filename("maven-metadata.xml" + type)
-                                                  .build();
-
-            if (!type.isEmpty())
-            {
-                return addArtifact(key, sr);
-            }
-            else
-            {
-                return addReleaseMetadata(key, sr);
-            }
-        }
-        catch (IOException exc)
-        {
-            throw new InternalServerErrorException(exc);
-        }    
-    }
+//    @PUT
+//    @Consumes(MediaType.WILDCARD)
+//    @Path("/releases/{group : .+}/{artifact : .+}/maven-metadata.xml{type : (\\.)?(\\w)*}")
+//    public Response uploadTopLevelMetadata(@Context final HttpServletRequest request,
+//                                           @PathParam("group") String group, 
+//                                           @PathParam("artifact") String artifact,
+//                                           @PathParam("type") String type, 
+//                                           InputStream uploadedInputStream)
+//    {
+//        JavaGroup jg = JavaGroup.slashDelimited(group);
+//        JavaIndexKey key = new JavaIndexKey(repositoryType, jg, artifact, "metadata");
+//        logger.debug("[Uploading Metadata] " + key.toString());
+//
+//        try
+//        {
+//            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
+//                                                  .length(request.getContentLength())
+//                                                  .stream(uploadedInputStream)
+//                                                  .filename("maven-metadata.xml" + type)
+//                                                  .build();
+//
+//            if (!type.isEmpty())
+//            {
+//                return addArtifact(key, sr);
+//            }
+//            else
+//            {
+//                return addReleaseMetadata(key, sr);
+//            }
+//        }
+//        catch (IOException exc)
+//        {
+//            throw new InternalServerErrorException(exc);
+//        }    
+//    }
 
     @Override
     public RepositoryType getType()

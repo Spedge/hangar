@@ -1,4 +1,4 @@
-package com.spedge.hangar.repo;
+package com.spedge.hangar.config;
 
 /**
  * Basic functionality to allow us to identify what sort of repository this is
@@ -7,7 +7,7 @@ package com.spedge.hangar.repo;
  * @author Spedge
  *
  */
-public enum RepositoryLanguage
+public enum ArtifactLanguage
 {
     JAVA, PYTHON, UNKNOWN
 }

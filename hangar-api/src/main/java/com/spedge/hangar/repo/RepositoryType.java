@@ -1,5 +1,7 @@
 package com.spedge.hangar.repo;
 
+import com.spedge.hangar.config.ArtifactLanguage;
+
 /**
  * Matrix of types of repository and what language the artifacts they handle are
  * written in.
@@ -9,20 +11,20 @@ package com.spedge.hangar.repo;
  */
 public enum RepositoryType
 {
-    RELEASE_JAVA(RepositoryLanguage.JAVA), 
-    SNAPSHOT_JAVA(RepositoryLanguage.JAVA), 
-    PROXY_JAVA(RepositoryLanguage.JAVA), 
-    PROXY_PYTHON(RepositoryLanguage.PYTHON),
-    UNKNOWN(RepositoryLanguage.UNKNOWN);
+    RELEASE_JAVA(ArtifactLanguage.JAVA), 
+    SNAPSHOT_JAVA(ArtifactLanguage.JAVA), 
+    PROXY_JAVA(ArtifactLanguage.JAVA), 
+    PROXY_PYTHON(ArtifactLanguage.PYTHON),
+    UNKNOWN(ArtifactLanguage.UNKNOWN);
 
-    private RepositoryLanguage lang;
+    private ArtifactLanguage lang;
 
-    RepositoryType(RepositoryLanguage lang)
+    RepositoryType(ArtifactLanguage lang)
     {
         this.lang = lang;
     }
 
-    public RepositoryLanguage getLanguage()
+    public ArtifactLanguage getLanguage()
     {
         return lang;
     }
