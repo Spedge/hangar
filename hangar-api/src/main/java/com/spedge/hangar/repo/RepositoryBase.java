@@ -60,13 +60,8 @@ public abstract class RepositoryBase implements IRepository
     {
         this.storage = storage;
         this.index = index;
-
-        //storage.initialiseStorage(getStorageTranslator(), storageConfig.getUploadPath());
-
-        //index.load(getType(), storage, storageConfig.getUploadPath());
+        this.createFactory();
     }
-
-    protected abstract IStorageTranslator getStorageTranslator();
 
     public void setStorageConfiguration(StorageConfiguration storageConfig)
     {
@@ -74,8 +69,8 @@ public abstract class RepositoryBase implements IRepository
     }
 
     public abstract RepositoryType getType();
-
     
+    protected abstract void createFactory();
     
     @Override
     public IStorage getStorage()

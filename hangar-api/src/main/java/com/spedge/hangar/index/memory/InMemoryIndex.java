@@ -1,6 +1,7 @@
 package com.spedge.hangar.index.memory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -12,9 +13,8 @@ import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.index.ReservedArtifact;
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.request.StorageRequestKey;
 
 public class InMemoryIndex implements IIndex
 {
@@ -26,12 +26,9 @@ public class InMemoryIndex implements IIndex
         this.index = new HashMap<String, IndexArtifact>();
     }
     
+    
     @Override
-    public void initaliseIndex()
-    {
-        // TODO Auto-generated method stub
-        
-    }
+    public void initaliseIndex(){}
 
     public boolean isArtifact(IndexKey key)
     {
@@ -66,25 +63,6 @@ public class InMemoryIndex implements IIndex
         return ia;
     }
 
-    /**
-     * Loads this index with the artifacts found in storage.
-     */
-    public void load(RepositoryType type, IStorage storage, String uploadPath)
-            throws StorageException
-    {
-//        for (IndexKey key : storage.getArtifactKeys(uploadPath))
-//        {
-//            try
-//            {
-//                index.put(key.toString(), storage.getIndexArtifact(key, uploadPath));
-//            }
-//            catch (IndexException ie)
-//            {
-//                logger.error("Could not parse artifact at " + uploadPath + "/" + key.toString());
-//            }
-//        }
-    }
-
     @Override
     public ReservedArtifact addReservationKey(IndexKey key)
     {
@@ -105,5 +83,16 @@ public class InMemoryIndex implements IIndex
         {
             throw new IndexConfictException();
         }
+    }
+
+
+    @Override
+    public void load(List<StorageRequestKey> keys) throws StorageException, IndexException
+    {
+        for(StorageRequestKey key : keys)
+        {
+            index.put(key.getConvertedPath("/"), null);
+        }
+        logger.info("Loaded " + keys.size() + " keys.");
     }
 }

@@ -1,5 +1,7 @@
 package com.spedge.hangar.storage;
 
+import java.util.List;
+
 import javax.ws.rs.core.StreamingOutput;
 
 import com.codahale.metrics.health.HealthCheck;
@@ -9,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.storage.local.LocalStorage;
 import com.spedge.hangar.storage.request.StorageRequest;
 import com.spedge.hangar.storage.request.StorageRequestException;
+import com.spedge.hangar.storage.request.StorageRequestKey;
 import com.spedge.hangar.storage.s3.S3Storage;
 
 /**
@@ -49,11 +52,11 @@ public interface IStorage
     
     @JsonProperty
     void setStorageConfiguration(StorageConfiguration sc);
+    
     /**
      * Call this method to initialise the storage - Storage should not be used
      * until this method has been called and this method should set isInitalised to true once complete.
      * 
-     * @param sc Configuration given via file at startup.
      * @throws StorageInitalisationException Exception thrown on unknown failure of Storage being Initialised
      */
     void initialiseStorage() throws StorageInitalisationException;
@@ -63,6 +66,14 @@ public interface IStorage
      * @return Healthcheck Object to be aggregated at a higher level.
      */
     HealthCheck getHealthcheck();
+    
+    /**
+     * Retrieve all the keys for a particular path
+     * @param sr A StorageRequest defining the path to refer to for these keys.
+     * @return A list of all the potential keys under this path.
+     * @throws StorageRequestException Exception on unknown failure of retrieval of keys
+     */
+    List<StorageRequestKey> getArtifactKeys(StorageRequest sr) throws StorageRequestException;
     
     /**
      * Retrieves a Stream for the Artifact that has been requested.

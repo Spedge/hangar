@@ -236,10 +236,4 @@ public class JavaSnapshotEndpoint extends JavaSnapshotRepository
     {
         return repositoryType;
     }
-    
-    @Override
-    public IStorageTranslator getStorageTranslator()
-    {
-        return new JavaStorageTranslator(getType());
-    }
 }

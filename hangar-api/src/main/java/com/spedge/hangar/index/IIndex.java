@@ -1,12 +1,13 @@
 package com.spedge.hangar.index;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.index.memory.InMemoryIndex;
 import com.spedge.hangar.index.zookeeper.ZooKeeperIndex;
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.storage.IStorage;
 import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.request.StorageRequestKey;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "index")
 @JsonSubTypes(
@@ -18,8 +19,9 @@ public interface IIndex
 {
     /**
      * On start-up, call this method to allow the index to achieve a running state.
+     * @throws IndexException If there is a failure starting up the index.
      */
-    void initaliseIndex();
+    void initaliseIndex() throws IndexException;
     
     /**
      * Confirms that this particular artifact is registered
@@ -45,8 +47,7 @@ public interface IIndex
 
     // When the index is empty on startup, we load it
     // from the appropriate storage.
-    void load(RepositoryType type, IStorage storage, String uploadPath)
-            throws StorageException, IndexException;
+    void load(List<StorageRequestKey> keys) throws StorageException, IndexException;
 
     // This allows a upload to reserve a path before uploading to it.
     ReservedArtifact addReservationKey(IndexKey key) throws IndexException;

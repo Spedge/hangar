@@ -113,10 +113,4 @@ public class JavaDownloadEndpoint extends JavaRepository
     {
         return repositoryType;
     }
-    
-    @Override
-    public IStorageTranslator getStorageTranslator()
-    {
-        return new JavaStorageTranslator(getType());
-    }
 }

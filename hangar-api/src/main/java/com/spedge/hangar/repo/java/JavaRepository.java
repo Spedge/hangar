@@ -35,10 +35,17 @@ public abstract class JavaRepository extends RepositoryBase
     protected final Logger logger = LoggerFactory.getLogger(JavaRepository.class);
 
     private JavaRepositoryHealthcheck check;
+    private MavenStorageRequestFactory factory;
 
     public JavaRepository()
     {
-        check = new JavaRepositoryHealthcheck();
+        this.check = new JavaRepositoryHealthcheck();
+        this.factory = new MavenStorageRequestFactory(getId());
+    }
+    
+    public void createFactory()
+    {
+        this.factory = new MavenStorageRequestFactory(getId());
     }
 
     /**
@@ -50,6 +57,20 @@ public abstract class JavaRepository extends RepositoryBase
         checks.put("java_repo", check);
         checks.put("java_storage", getStorage().getHealthcheck());
         return checks;
+    }
+    
+    public void reloadIndex()
+    {
+        StorageRequest sr = factory.downloadKeysRequest();
+        try
+        {
+            super.getIndex().load(super.getStorage().getArtifactKeys(sr));
+        }
+        catch (StorageException | IndexException | StorageRequestException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     protected StreamingOutput getArtifact(JavaIndexKey key, String filename)
@@ -67,7 +88,7 @@ public abstract class JavaRepository extends RepositoryBase
                 // If it doesn't, we tell the requester that it's not found.
                 if (true || getIndex().isArtifact(key))
                 {
-                    StorageRequest sr = MavenStorageRequestFactory.downloadArtifactRequest(key);
+                    StorageRequest sr = factory.downloadArtifactRequest(key);
 
                     try
                     {

@@ -33,6 +33,11 @@ public class StorageRequestKey
         return path;
     }
     
+    public String getConvertedPath(String newDelimiter)
+    {
+        return path.replace(delimiter, newDelimiter);
+    }
+    
     public ArtifactLanguage getType()
     {
         return type;

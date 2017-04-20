@@ -63,21 +63,18 @@ public class Hangar extends Application<HangarConfiguration>
         {
             repo.loadRepository(storage, index);
 
+            // Once all parts of the system are up, we can begin start-up actions.
+            // If it is stated (by default, false) we will re-index the storage.
+            if(configuration.getOnStartup().getReIndex())
+            {
+                repo.reloadIndex();
+            }
+            
             for (String key : repo.getHealthChecks().keySet())
             {
                 environment.healthChecks().register(key, repo.getHealthChecks().get(key));
             }
             environment.jersey().register(repo);
-        }
-
-        // Once all parts of the system are up, we can begin start-up actions.
-        // If it is stated (by default, false) we will re-index the storage.
-        if(configuration.getOnStartup().getReIndex())
-        {
-            for (IRepository repo : repos)
-            {
-                repo.reloadIndex();
-            }
         }
         
         // This is a path that I can hit to see the details of a request,

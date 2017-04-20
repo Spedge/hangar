@@ -12,7 +12,7 @@ import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.ReservedArtifact;
 import com.spedge.hangar.testutils.IndexUtils;
 
-public class TestZookeeperIndex 
+class TestZookeeperIndex 
 {
 	ZooKeeperIndex index;
 	

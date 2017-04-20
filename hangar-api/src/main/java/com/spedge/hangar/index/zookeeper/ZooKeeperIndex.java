@@ -12,6 +12,8 @@ import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.index.ReservedArtifact;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.storage.IStorage;
+import com.spedge.hangar.storage.StorageException;
+import com.spedge.hangar.storage.request.StorageRequestKey;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.curator.RetryPolicy;
@@ -118,9 +120,9 @@ public class ZooKeeperIndex implements IIndex
         }
     }
 
-    @Override
-    public void load(RepositoryType type, IStorage storage, String uploadPath) throws IndexException
-    {
+//    @Override
+//    public void load(RepositoryType type, IStorage storage, String uploadPath) throws IndexException
+//    {
 //        try
 //        {
 //            startClient(this.connectionString);
@@ -142,8 +144,8 @@ public class ZooKeeperIndex implements IIndex
 //        {
 //            throw new IndexException(exc);
 //        }
-
-    }
+//
+//    }
 
     @Override
     public ReservedArtifact addReservationKey(IndexKey key) throws IndexException
@@ -240,5 +242,25 @@ public class ZooKeeperIndex implements IIndex
                 client.start();
             }
         }
+    }
+
+    @Override
+    public void initaliseIndex() throws IndexException
+    {
+        try
+        {
+            startClient(this.connectionString);
+        }
+        catch (Exception exc)
+        {
+            throw new IndexException(exc);
+        }
+    }
+
+    @Override
+    public void load(List<StorageRequestKey> keys) throws StorageException, IndexException
+    {
+        // TODO Auto-generated method stub
+        
     }
 }

@@ -23,6 +23,7 @@ import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.StorageInitalisationException;
 import com.spedge.hangar.storage.request.StorageRequest;
 import com.spedge.hangar.storage.request.StorageRequestException;
+import com.spedge.hangar.storage.request.StorageRequestKey;
 
 public class TestStorage implements IStorage 
 {
@@ -106,6 +107,13 @@ public class TestStorage implements IStorage
     {
         // TODO Auto-generated method stub
         
+    }
+
+    @Override
+    public List<StorageRequestKey> getArtifactKeys(StorageRequest sr) throws StorageRequestException
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 //	@Override

@@ -176,10 +176,4 @@ public class JavaReleaseEndpoint extends JavaReleaseRepository
     {
         return repositoryType;
     }
-    
-    @Override
-    public IStorageTranslator getStorageTranslator()
-    {
-        return new JavaStorageTranslator(getType());
-    }
 }

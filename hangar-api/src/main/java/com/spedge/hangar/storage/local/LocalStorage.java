@@ -8,11 +8,14 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.StreamingOutput;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.io.ByteStreams;
+import com.spedge.hangar.config.ArtifactLanguage;
 import com.spedge.hangar.storage.Storage;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageInitalisationException;
@@ -132,6 +135,31 @@ public class LocalStorage extends Storage
         }
     }
     
+    @Override
+    public List<StorageRequestKey> getArtifactKeys(StorageRequest sr) throws StorageRequestException
+    {
+        List<StorageRequestKey> keys;
+        ArtifactLanguage type = sr.getIndex().getType();
+        Path sourcePath = convertIndex(sr.getIndex());
+        
+        try
+        {
+            keys = Files.walk(sourcePath)
+                        .filter(Files::isRegularFile) // For each file
+                        .map(e -> e.toString().replace(sourcePath.toString(), "")) // Remove the absolute path
+                        //.map(e -> e.subSequence(0, e.lastIndexOf(File.separator)).toString())
+                        .distinct() // Get rid of any replicas
+                        .map(e -> new StorageRequestKey(type, "/", e))
+                        .collect(Collectors.toList());
+            
+            return keys;
+        }
+        catch (IOException ioe)
+        {
+            throw new StorageRequestException(ioe);
+        }
+    }
+    
     /**
      * Converts a StorageRequestIndex entry into a Path to be used by the LocalStorage layer
      * 
@@ -140,7 +168,7 @@ public class LocalStorage extends Storage
      */
     private Path convertIndex(StorageRequestKey index)
     {
-        return fs.getPath(this.rootPath + index.getPath());
+        return fs.getPath(this.rootPath + index.getConvertedPath("/"));
     }
     
     @Override
