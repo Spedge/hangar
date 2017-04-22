@@ -1,14 +1,17 @@
 package com.spedge.hangar.repo.java;
 
-import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +19,9 @@ import com.codahale.metrics.health.HealthCheck;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
-import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.proxy.ProxyRequest;
 import com.spedge.hangar.proxy.RemoteMavenProxy;
 import com.spedge.hangar.repo.RepositoryBase;
-import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.repo.maven.MavenStorageRequestFactory;
@@ -40,7 +41,7 @@ public abstract class JavaRepository extends RepositoryBase
         this.check = new JavaRepositoryHealthcheck();
         this.factory = new MavenStorageRequestFactory(getId());
     }
-    
+
     public void createFactory()
     {
         this.factory = new MavenStorageRequestFactory(getId());
@@ -56,34 +57,39 @@ public abstract class JavaRepository extends RepositoryBase
         checks.put("java_storage", getStorage().getHealthcheck());
         return checks;
     }
-    
+
+    @Override
     public void reloadIndex()
     {
         StorageRequest sr = factory.downloadKeysRequest();
-        
+
         try
         {
-            int complete = 0, conflict = 0, exception = 0;
-            for(StorageRequestKey key : super.getStorage().getArtifactKeys(sr))
+            int complete = 0;
+            int conflict = 0;
+            int exception = 0;
+            
+            for (StorageRequestKey key : super.getStorage().getArtifactKeys(sr))
             {
                 try
                 {
                     addArtifactToIndex(key, new JavaIndexArtifact(key.getKey("/")));
                     complete++;
                 }
-                catch (IndexConfictException e)
+                catch (IndexConfictException ice)
                 {
-                    e.printStackTrace();
+                    ice.printStackTrace();
                     conflict++;
                 }
-                catch (IndexException e)
+                catch (IndexException ie)
                 {
-                    e.printStackTrace();
+                    ie.printStackTrace();
                     exception++;
                 }
             }
-            
-            logger.info("Loaded " + complete + " keys, " + conflict + " conflicts and " + exception + " errors.");
+
+            logger.info("Loaded " + complete + " keys, " + conflict + " conflicts and " + exception
+                            + " errors.");
         }
         catch (StorageRequestException sre)
         {
@@ -94,13 +100,13 @@ public abstract class JavaRepository extends RepositoryBase
 
     protected StreamingOutput getArtifact(JavaIndexKey key, String filename)
     {
-//        if (Pattern.matches("[.\\d\\.]*-SNAPSHOT", key.getVersion()))
-//        {
-//            logger.info("[Downloading Snapshot] " + key.toString());
-//            return getSnapshotArtifact(key, filename);
-//        }
-//        else
-//        {
+        if (Pattern.matches("[.\\d\\.]*-SNAPSHOT", key.getVersion()))
+        {
+            logger.info("[Downloading Snapshot] " + key.toString());
+            return getSnapshotArtifact(key, filename);
+        }
+        else
+        {
             try
             {
                 // Let's check if the file exists in our index.
@@ -112,8 +118,8 @@ public abstract class JavaRepository extends RepositoryBase
                     try
                     {
                         return getStorage().getArtifactStream(sr);
-                    } 
-                    catch (StorageRequestException se) 
+                    }
+                    catch (StorageRequestException se)
                     {
                         throw new NotFoundException();
                     }
@@ -127,71 +133,72 @@ public abstract class JavaRepository extends RepositoryBase
             {
                 throw new InternalServerErrorException();
             }
-        //}
+        }
     }
 
-    private void addArtifactToIndex(StorageRequestKey key, IndexArtifact jia) throws IndexConfictException, IndexException
-    {        
-        String[] index = key.getFullKey();
-        JavaGroup group = JavaGroup.arrayDelimited(Arrays.copyOfRange(index, 0, index.length - 3));
-        String artifact = index[index.length - 3];
-        String version = index[index.length - 2];
-        
-        getIndex().addArtifact(new JavaIndexKey(getType(), group, artifact, version), jia);
+    private void addArtifactToIndex(StorageRequestKey key, IndexArtifact jia)
+                    throws IndexConfictException, IndexException
+    {
+        JavaIndexKey jik = factory.convertKeys(getType(), key);
+        getIndex().addArtifact(jik, jia);
     }
-    
+
     private void addArtifactToIndex(StorageRequest sr) throws IndexConfictException, IndexException
     {
         addArtifactToIndex(sr.getKey(), new JavaIndexArtifact(sr.getKey().getKey("/")));
     }
-//
-//    protected Response addArtifact(JavaIndexKey key, StorageRequest sr)
-//    {
-//        // If we simply have an artifact to add that has no effect on the index,
-//        // go ahead and get it done.
-//        addArtifactToStorage(key, sr);
-//        return Response.ok().build();
-//    }
-//    
-//    /**
-//     * This version is different as we need to re-write the filename with the
-//     * timestamp for the latest version.
-//     * 
-//     * @param key
-//     *            IndexKey to find the Artifact in the Index
-//     * @param filename
-//     *            Filename from the request
-//     * @return StreamingOutput from the Storage Layer
-//     */
-//    protected StreamingOutput getSnapshotArtifact(JavaIndexKey key, String filename)
-//    {
-//        logger.info("[Downloading Snapshot] " + key);
-//        try
-//        {
-//            if (getIndex().isArtifact(key))
-//            {
-//                JavaIndexArtifact ia = (JavaIndexArtifact) getIndex().getArtifact(key);
-//                String snapshotFilename = filename.replace(key.getVersion(), ia.getSnapshotVersion());
-//                return getStorage().getArtifactStream(ia, snapshotFilename);
-//            }
-//            else
-//            {
-//                throw new NotFoundException();
-//            }
-//        }
-//        catch (IndexException ie)
-//        {
-//            throw new InternalServerErrorException();
-//        }
-//    }
-//    
+
     /**
-     * Retrieve an artifact, starting with our local artifact store.
-     * If it doesn't exist, prepare a request and retrieve the artifact from storage.
+     * This version is different as we need to re-write the filename with the
+     * timestamp for the latest version.
      * 
-     * @param proxies Array of potential proxy sources
-     * @param key IndexKey for the requested artifact
-     * @param filename The filename of the file requested
+     * @param key
+     *            IndexKey to find the Artifact in the Index
+     * @param filename
+     *            Filename from the request
+     * @return StreamingOutput from the Storage Layer
+     */
+    protected StreamingOutput getSnapshotArtifact(JavaIndexKey key, String filename)
+    {
+        logger.info("[Downloading Snapshot] " + key);
+        try
+        {
+            if (getIndex().isArtifact(key))
+            {
+                JavaIndexArtifact ia = (JavaIndexArtifact) getIndex().getArtifact(key);
+                String snapshotFilename = filename.replace(key.getVersion(),
+                                ia.getSnapshotVersion());
+
+                return getStorage().getArtifactStream(
+                                factory.downloadArtifactRequest(key, snapshotFilename));
+            }
+            else
+            {
+                throw new NotFoundException();
+            }
+        }
+        catch (IndexException ie)
+        {
+            throw new InternalServerErrorException();
+        }
+        catch (StorageRequestException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Retrieve an artifact, starting with our local artifact store. If it
+     * doesn't exist, prepare a request and retrieve the artifact from storage.
+     * 
+     * @param proxies
+     *            Array of potential proxy sources
+     * @param key
+     *            IndexKey for the requested artifact
+     * @param filename
+     *            The filename of the file requested
      * @return StreamingOutput of the file
      */
     public StreamingOutput getProxiedArtifact(String[] proxies, JavaIndexKey key, String filename)
@@ -207,21 +214,22 @@ public abstract class JavaRepository extends RepositoryBase
                 // We create an artifact request to work with a remote proxy,
                 // much in the same as we would a normal storage request.
                 ProxyRequest pr = factory.proxyArtifactRequest(proxies, key, filename);
-	            RemoteMavenProxy.requestProxiedArtifact(pr);
-	            
-	            // However, once we've got the item, the path we want to store it 
-	            // in is slightly wrong, so we need to re-set it back to a StorageRequest.
-	            StorageRequest sr = factory.downloadArtifactRequest(key, filename, pr);
-	            
-	            addArtifactToStorage(sr);
-	            addArtifactToIndex(sr);
-	            
-	            return sr.getStreamingOutput();
+                RemoteMavenProxy.requestProxiedArtifact(pr);
+
+                // However, once we've got the item, the path we want to store
+                // it
+                // in is slightly wrong, so we need to re-set it back to a
+                // StorageRequest.
+                StorageRequest sr = factory.downloadArtifactRequest(key, filename, pr);
+
+                addArtifactToStorage(sr);
+                addArtifactToIndex(sr);
+
+                return sr.getStreamingOutput();
             }
             catch (NotFoundException nfee)
             {
-                return null;
-//           		return createChecksum(key, filename);
+                return createChecksum(key, filename);
             }
             catch (IndexConfictException e)
             {
@@ -237,97 +245,110 @@ public abstract class JavaRepository extends RepositoryBase
             }
         }
     }
-//    
-//    /**
-//     * If there is not a checksum file uploaded as part of the artefact (which, really, you should do)
-//     * then we assume what we've got is valid and create a checksum file for the client to check the download.
-//     * 
-//     * @param key Key of the Checksum file missing
-//     * @param filename Filename of the checksum file missing
-//     * @return StreamingOutput
-//     */
-//    private StreamingOutput createChecksum(JavaIndexKey key, String filename)
-//    {
-//    	if(filename.endsWith(".sha1"))
-//    	{
-//    		return createChecksum(key, filename, new ChecksumWrapper(){
-//
-//				@Override
-//				String getTargetFilename(String filename) {
-//					return filename.subSequence(0, (filename.length() - 5)).toString();
-//				}
-//
-//				@Override
-//				String getDigestString(ByteArrayOutputStream out) {
-//					return DigestUtils.sha1Hex(out.toByteArray());
-//				}
-//
-//				@Override
-//				String getType() {
-//					return "SHA1";
-//				}
-//    		});
-//    	}
-//    	else if(filename.endsWith(".md5"))
-//    	{
-//    		return createChecksum(key, filename, new ChecksumWrapper(){
-//
-//				@Override
-//				String getTargetFilename(String filename) {
-//					return filename.subSequence(0, (filename.length() - 4)).toString();
-//				}
-//
-//				@Override
-//				String getDigestString(ByteArrayOutputStream out) {
-//					return DigestUtils.md5Hex(out.toByteArray());
-//				}
-//
-//				@Override
-//				String getType() {
-//					return "MD5";
-//				}
-//    		});
-//    	}
-//    	else
-//    	{
-//    		throw new NotFoundException();
-//    	}
-//    }
-//    	
-//	private StreamingOutput createChecksum(JavaIndexKey key, String filename, ChecksumWrapper checksumWrapper) 
-//	{
-//		try
-//		{
-//			IndexArtifact ia = getStorage().getIndexArtifact(key, getPath());
-//			StreamingOutput so = getStorage().getArtifactStream(ia, checksumWrapper.getTargetFilename(filename));
-//    		ByteArrayOutputStream out = new ByteArrayOutputStream();
-//    		so.write(out);
-//    		
-//    		String checksum = checksumWrapper.getDigestString(out);
-//    		out.close();
-//    		
-//    		logger.info("[Warning] No checksum found, generated " + checksumWrapper.getType() + " Checksum : " + checksum);
-//    		
-//            StorageRequest sr = new StorageRequest.StorageRequestBuilder()
-//				                .length(checksum.length())
-//				                .stream(checksum.getBytes())
-//				                .filename(filename)
-//				                .build();
-//
-//            addArtifactToStorage(key, sr);
-//            return sr.getStreamingOutput();
-//		}
-//		catch(IOException | IndexException e)
-//		{
-//    		logger.error("[ERROR] Could not generate checksum for : " + filename + ", " + e.getMessage());
-//			throw new NotFoundException();
-//		} 
-//	}
-//
-//	abstract class ChecksumWrapper
-//	{
-//		abstract String getTargetFilename(String filename);
-//		abstract String getType();
-//		abstract String getDigestString(ByteArrayOutputStream out);
-//	}
+
+    /**
+     * If there is not a checksum file uploaded as part of the artefact (which,
+     * really, you should do) then we assume what we've got is valid and create
+     * a checksum file for the client to check the download.
+     * 
+     * @param key
+     *            Key of the Checksum file missing
+     * @param filename
+     *            Filename of the checksum file missing
+     * @return StreamingOutput
+     */
+    private StreamingOutput createChecksum(JavaIndexKey key, String filename)
+    {
+        if (filename.endsWith(".sha1"))
+        {
+            return createChecksum(key, filename, new ChecksumWrapper()
+            {
+
+                @Override
+                String getTargetFilename(String filename)
+                {
+                    return filename.subSequence(0, (filename.length() - 5)).toString();
+                }
+
+                @Override
+                String getDigestString(ByteArrayOutputStream out)
+                {
+                    return DigestUtils.sha1Hex(out.toByteArray());
+                }
+
+                @Override
+                String getType()
+                {
+                    return "SHA1";
+                }
+            });
+        }
+        else if (filename.endsWith(".md5"))
+        {
+            return createChecksum(key, filename, new ChecksumWrapper()
+            {
+
+                @Override
+                String getTargetFilename(String filename)
+                {
+                    return filename.subSequence(0, (filename.length() - 4)).toString();
+                }
+
+                @Override
+                String getDigestString(ByteArrayOutputStream out)
+                {
+                    return DigestUtils.md5Hex(out.toByteArray());
+                }
+
+                @Override
+                String getType()
+                {
+                    return "MD5";
+                }
+            });
+        }
+        else
+        {
+            throw new NotFoundException();
+        }
+    }
+
+    private StreamingOutput createChecksum(JavaIndexKey key, String filename,
+                    ChecksumWrapper checksumWrapper)
+    {
+        try
+        {
+            StreamingOutput so = getArtifact(key, checksumWrapper.getTargetFilename(filename));
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            so.write(out);
+
+            String checksum = checksumWrapper.getDigestString(out);
+            out.close();
+
+            logger.info("[Warning] No checksum found, generated " + checksumWrapper.getType()
+                            + " Checksum : " + checksum);
+
+            StorageRequest sr = new StorageRequest.StorageRequestBuilder().length(checksum.length())
+                            .stream(checksum.getBytes()).filename(filename).build();
+
+            addArtifactToStorage(sr);
+            return sr.getStreamingOutput();
+        }
+        catch (IOException ioe)
+        {
+            logger.error("[ERROR] Could not generate checksum for : " + filename + ", "
+                            + ioe.getMessage());
+            throw new NotFoundException();
+        }
+    }
+
+    abstract class ChecksumWrapper
+    {
+        abstract String getTargetFilename(String filename);
+
+        abstract String getType();
+
+        abstract String getDigestString(ByteArrayOutputStream out);
+    }
 }

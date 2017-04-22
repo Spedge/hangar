@@ -23,6 +23,13 @@ public class RemoteMavenProxy
 {
     protected static final Logger logger = LoggerFactory.getLogger(RemoteMavenProxy.class);
 
+    /**
+     * Cycles through the proxies in the request and attempts to find the artefact in question.
+     * Puts the response into the ProxyRequest and hands it back.
+     * 
+     * @param pr ProxyRequest detailing the artefact we are looking for.
+     * @return Same ProxyRequest with the ProxyResponse within it. 
+     */
     public static ProxyRequest requestProxiedArtifact(ProxyRequest pr)
     {
         try

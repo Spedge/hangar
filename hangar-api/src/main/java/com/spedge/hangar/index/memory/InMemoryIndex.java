@@ -40,6 +40,7 @@ public class InMemoryIndex implements IIndex
      */
     public boolean isArtifact(IndexKey key)
     {
+        logger.info("Checking " + key);
         return index.containsKey(key.toString());
     }
    
@@ -61,6 +62,7 @@ public class InMemoryIndex implements IIndex
         }
         else
         {
+            logger.info("Adding " + key.toString());
             index.put(key.toString(), artifact);
         }
     }
