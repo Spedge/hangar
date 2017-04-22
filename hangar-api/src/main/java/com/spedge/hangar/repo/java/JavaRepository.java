@@ -1,5 +1,6 @@
 package com.spedge.hangar.repo.java;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,14 +13,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.health.HealthCheck;
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
+import com.spedge.hangar.index.IndexKey;
+import com.spedge.hangar.proxy.ProxyRequest;
+import com.spedge.hangar.proxy.RemoteMavenProxy;
 import com.spedge.hangar.repo.RepositoryBase;
+import com.spedge.hangar.repo.java.base.JavaGroup;
 import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
 import com.spedge.hangar.repo.java.index.JavaIndexKey;
 import com.spedge.hangar.repo.maven.MavenStorageRequestFactory;
-import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.request.StorageRequest;
 import com.spedge.hangar.storage.request.StorageRequestException;
+import com.spedge.hangar.storage.request.StorageRequestKey;
 
 @Path("/java")
 public abstract class JavaRepository extends RepositoryBase
@@ -53,14 +60,35 @@ public abstract class JavaRepository extends RepositoryBase
     public void reloadIndex()
     {
         StorageRequest sr = factory.downloadKeysRequest();
+        
         try
         {
-            super.getIndex().load(getType(), super.getStorage().getArtifactKeys(sr));
+            int complete = 0, conflict = 0, exception = 0;
+            for(StorageRequestKey key : super.getStorage().getArtifactKeys(sr))
+            {
+                try
+                {
+                    addArtifactToIndex(key, new JavaIndexArtifact(key.getKey("/")));
+                    complete++;
+                }
+                catch (IndexConfictException e)
+                {
+                    e.printStackTrace();
+                    conflict++;
+                }
+                catch (IndexException e)
+                {
+                    e.printStackTrace();
+                    exception++;
+                }
+            }
+            
+            logger.info("Loaded " + complete + " keys, " + conflict + " conflicts and " + exception + " errors.");
         }
-        catch (StorageException | IndexException | StorageRequestException e)
+        catch (StorageRequestException sre)
         {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            sre.printStackTrace();
         }
     }
 
@@ -77,7 +105,7 @@ public abstract class JavaRepository extends RepositoryBase
             {
                 // Let's check if the file exists in our index.
                 // If it doesn't, we tell the requester that it's not found.
-                if (true || getIndex().isArtifact(key))
+                if (getIndex().isArtifact(key))
                 {
                     StorageRequest sr = factory.downloadArtifactRequest(key, filename);
 
@@ -99,29 +127,23 @@ public abstract class JavaRepository extends RepositoryBase
             {
                 throw new InternalServerErrorException();
             }
-//        }
+        //}
     }
-//
-//    protected Response addMetadata(JavaIndexKey key, StorageRequest sr)
-//    {
-//        // Use the input to write it to disk
-//        IndexArtifact ia = addArtifactToStorage(key, sr);
-//        
-//        try
-//        {
-//            // Once we're happy it's there, update the index.
-//            getIndex().addArtifact(key, ia);
-//        }
-//        catch (IndexException ie)
-//        {
-//            return Response.status(HttpStatus.INTERNAL_SERVER_ERROR_500).build();
-//        }
-//        catch (IndexConfictException ice)
-//        {
-//            return Response.status(HttpStatus.CONFLICT_409).build();
-//        }
-//        return Response.ok().build();
-//    }
+
+    private void addArtifactToIndex(StorageRequestKey key, IndexArtifact jia) throws IndexConfictException, IndexException
+    {        
+        String[] index = key.getFullKey();
+        JavaGroup group = JavaGroup.arrayDelimited(Arrays.copyOfRange(index, 0, index.length - 3));
+        String artifact = index[index.length - 3];
+        String version = index[index.length - 2];
+        
+        getIndex().addArtifact(new JavaIndexKey(getType(), group, artifact, version), jia);
+    }
+    
+    private void addArtifactToIndex(StorageRequest sr) throws IndexConfictException, IndexException
+    {
+        addArtifactToIndex(sr.getKey(), new JavaIndexArtifact(sr.getKey().getKey("/")));
+    }
 //
 //    protected Response addArtifact(JavaIndexKey key, StorageRequest sr)
 //    {
@@ -129,32 +151,6 @@ public abstract class JavaRepository extends RepositoryBase
 //        // go ahead and get it done.
 //        addArtifactToStorage(key, sr);
 //        return Response.ok().build();
-//    }
-//
-//    /*
-//     * This concentrates on actually getting the artifact into storage. Saves
-//     * duplication of code.
-//     */
-//    protected IndexArtifact addArtifactToStorage(JavaIndexKey key, StorageRequest sr)
-//    {
-//        // Artifacts are uploaded, but for them to become live they need
-//        // metadata uploaded.
-//        // All this does is save it successfully.
-//        try
-//        {
-//            // Create the entry for the index that contains current information
-//            // about the artifact.
-//            IndexArtifact ia = getStorage().getIndexArtifact(key, getPath());
-//
-//            // Upload the file we need.
-//            getStorage().uploadSnapshotArtifactStream(ia, sr);
-//
-//            return ia;
-//        }
-//        catch (IndexException | StorageException se)
-//        {
-//            throw new InternalServerErrorException();
-//        }
 //    }
 //    
 //    /**
@@ -206,25 +202,38 @@ public abstract class JavaRepository extends RepositoryBase
         }
         catch (NotFoundException nfe)
         {
-            String path = key.getGroup().getGroupAsPath() + "/" 
-                            + key.getArtifact() + "/" 
-                            + key.getVersion() + "/" 
-                            + filename;
-            
             try
             {
-	            StorageRequest sr = requestProxiedArtifact(proxies, path, filename);
+                // We create an artifact request to work with a remote proxy,
+                // much in the same as we would a normal storage request.
+                ProxyRequest pr = factory.proxyArtifactRequest(proxies, key, filename);
+	            RemoteMavenProxy.requestProxiedArtifact(pr);
 	            
-//	            // Because this is an artifact that's new to us in the proxy, 
-//	            // we want to add it to the index.
-//	            addMetadata(key, sr);
-//	            
+	            // However, once we've got the item, the path we want to store it 
+	            // in is slightly wrong, so we need to re-set it back to a StorageRequest.
+	            StorageRequest sr = factory.downloadArtifactRequest(key, filename, pr);
+	            
+	            addArtifactToStorage(sr);
+	            addArtifactToIndex(sr);
+	            
 	            return sr.getStreamingOutput();
             }
             catch (NotFoundException nfee)
             {
                 return null;
 //           		return createChecksum(key, filename);
+            }
+            catch (IndexConfictException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return null;
+            }
+            catch (IndexException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return null;
             }
         }
     }

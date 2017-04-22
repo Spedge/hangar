@@ -2,9 +2,7 @@ package com.spedge.hangar.storage.request;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.spedge.hangar.config.ArtifactLanguage;
-import com.spedge.hangar.index.IndexKey;
+import java.util.stream.Collectors;
 
 public class StorageRequestKey
 {
@@ -13,10 +11,10 @@ public class StorageRequestKey
 
     public StorageRequestKey(List<String> index, String filename)
     {
-        this.index = index;
+        this.index = index.stream().filter(item -> !item.isEmpty()).collect(Collectors.toList());
         this.filename = filename;
     }
-        
+
     public String[] getFullKey()
     {
         List<String> tempIndex = new ArrayList<String>(index);
@@ -37,5 +35,10 @@ public class StorageRequestKey
     public String getKey(String delimiter)
     {
         return String.join(delimiter, index);
+    }
+    
+    public List<String> getKey()
+    {
+        return index;
     }
 }

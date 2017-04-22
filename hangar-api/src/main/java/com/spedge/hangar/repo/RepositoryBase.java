@@ -1,7 +1,5 @@
 package com.spedge.hangar.repo;
 
-import io.dropwizard.setup.Environment;
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,25 +21,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.spedge.hangar.config.HangarConfiguration;
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.storage.IStorage;
-import com.spedge.hangar.storage.IStorageTranslator;
-import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.request.StorageRequest;
+import com.spedge.hangar.storage.request.StorageRequestException;
 
 public abstract class RepositoryBase implements IRepository
 {
     private IStorage storage;
     private IIndex index;
-    private StorageConfiguration storageConfig;
     protected final Logger logger = LoggerFactory.getLogger(RepositoryBase.class);
-    
+
     @NotEmpty
     private String id;
-    
+
     @JsonProperty
     public String getId()
     {
@@ -53,25 +48,20 @@ public abstract class RepositoryBase implements IRepository
     {
         this.id = id;
     }
-    
+
     @Override
     public void loadRepository(IStorage storage, IIndex index)
-            throws IndexException, StorageException
+                    throws IndexException, StorageException
     {
         this.storage = storage;
         this.index = index;
         this.createFactory();
     }
 
-    public void setStorageConfiguration(StorageConfiguration storageConfig)
-    {
-        this.storageConfig = storageConfig;
-    }
-
     public abstract RepositoryType getType();
-    
+
     protected abstract void createFactory();
-    
+
     @Override
     public IStorage getStorage()
     {
@@ -83,52 +73,18 @@ public abstract class RepositoryBase implements IRepository
     {
         return index;
     }
-    
-    protected StorageRequest requestProxiedArtifact(String[] proxies, String path, String filename)
+
+    /*
+     * This concentrates on actually getting the artifact into storage. Saves
+     * duplication of code.
+     */
+    protected void addArtifactToStorage(StorageRequest sr)
     {
         try
         {
-            for (String source : proxies)
-            {               
-                // So the artifact doesn't exist. We try and download it and
-                // save it to disk.
-            	ClientConfig configuration = new ClientConfig();
-            	configuration = configuration.property(ClientProperties.CONNECT_TIMEOUT, 60000);
-            	configuration = configuration.property(ClientProperties.READ_TIMEOUT, 60000);
-            	
-                Client client = ClientBuilder.newClient(configuration);
-                WebTarget target = client.target(source).path(path);
-                
-                logger.info("[Downloading Proxied Artifact] " + target.getUri());
-
-                Invocation.Builder builder = target.request(MediaType.WILDCARD);
-                Response resp = builder.get();
-
-                if (resp.getStatus() == HttpStatus.OK_200)
-                {
-                    logger.info("[Proxy] Downloading from " + source);
-
-                    // We need to load it into memory. We'll look at doing
-                    // this another way
-                    // (perhaps to disk first) but I'd rather download then
-                    // upload to S3 and back to the client
-                    // concurrently. Not sure if this is possible but it'd
-                    // save a bunch of time.
-                    InputStream in = resp.readEntity(InputStream.class);
-                    byte[] byteArray = IOUtils.toByteArray(in);
-                    resp.close();
-
-                    // Now upload the artifact to our proxy location.
-                    return new StorageRequest.StorageRequestBuilder()
-                                    .filename(filename)
-                                    .stream(byteArray)
-                                    .length(resp.getLength())
-                                    .build();
-                }
-            }
-            throw new NotFoundException();
+            getStorage().uploadArtifactStream(sr);
         }
-        catch (IOException exp)
+        catch (StorageRequestException sre)
         {
             throw new InternalServerErrorException();
         }

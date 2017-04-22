@@ -1,19 +1,9 @@
 package com.spedge.hangar.index.zookeeper;
 
-import com.amazonaws.util.EC2MetadataUtils;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import com.spedge.hangar.index.IIndex;
-import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexConfictException;
-import com.spedge.hangar.index.IndexException;
-import com.spedge.hangar.index.IndexKey;
-import com.spedge.hangar.index.ReservedArtifact;
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.storage.IStorage;
-import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.request.StorageRequestKey;
+import javax.validation.constraints.NotNull;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.curator.RetryPolicy;
@@ -28,9 +18,14 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.validation.constraints.NotNull;
+import com.amazonaws.util.EC2MetadataUtils;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.spedge.hangar.index.IIndex;
+import com.spedge.hangar.index.IndexArtifact;
+import com.spedge.hangar.index.IndexConfictException;
+import com.spedge.hangar.index.IndexException;
+import com.spedge.hangar.index.IndexKey;
+import com.spedge.hangar.index.ReservedArtifact;
 
 /**
  * <p>This is the interface for an index based on Zookeeper.
@@ -255,13 +250,5 @@ public class ZooKeeperIndex implements IIndex
         {
             throw new IndexException(exc);
         }
-    }
-
-    @Override
-    public void load(RepositoryType type, List<StorageRequestKey> keys)
-                    throws StorageException, IndexException
-    {
-        // TODO Auto-generated method stub
-        
     }
 }

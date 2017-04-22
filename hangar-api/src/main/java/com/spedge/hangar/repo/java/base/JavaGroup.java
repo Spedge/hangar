@@ -65,6 +65,16 @@ public class JavaGroup
         return new JavaGroup(groupString);
     }
     
+    /**
+     * Used to generate a JavaGroup from an array of strings.
+     * @param groupString org, blah, things
+     * @return A new JavaGroup with the correct format.
+     */
+    public static JavaGroup arrayDelimited(String... groupString)
+    {
+        return new JavaGroup(String.join(".", groupString));
+    }
+    
     @Override
     public String toString()
     {

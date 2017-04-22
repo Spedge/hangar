@@ -8,16 +8,17 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.StreamingOutput;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.io.ByteStreams;
-import com.spedge.hangar.config.ArtifactLanguage;
 import com.spedge.hangar.storage.Storage;
 import com.spedge.hangar.storage.StorageConfiguration;
 import com.spedge.hangar.storage.StorageInitalisationException;
@@ -142,7 +143,7 @@ public class LocalStorage extends Storage
     {
         List<StorageRequestKey> keys;
         Path sourcePath = convertIndex(sr);
-        
+                
         try
         {
             keys = Files.walk(sourcePath)
@@ -150,7 +151,9 @@ public class LocalStorage extends Storage
                         .map(e -> e.toString().replace(sourcePath.toString(), "")) // Remove the absolute path
                         .distinct() // Get rid of any replicas
                         .map(e -> fs.getPath(e)) // Rebuild into a path
-                        .map(e -> new StorageRequestKey(new ArrayList<String>(Arrays.asList(e.getParent().toString().split("/"))), e.getFileName().toString()))
+                        .map(e -> new StorageRequestKey(
+                                        Arrays.asList(e.getParent().toString().split(Matcher.quoteReplacement(System.getProperty("file.separator")))), 
+                                        e.getFileName().toString()))
                         .collect(Collectors.toList());
             
             return keys;

@@ -1,14 +1,9 @@
 package com.spedge.hangar.index;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.index.memory.InMemoryIndex;
 import com.spedge.hangar.index.zookeeper.ZooKeeperIndex;
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.request.StorageRequestKey;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "index")
 @JsonSubTypes(
@@ -45,11 +40,6 @@ public interface IIndex
     // Once we're happy with the artifact we want to get,
     // we need details of where to stream it from.
     IndexArtifact getArtifact(IndexKey key) throws IndexException;
-
-    // When the index is empty on startup, we load it
-    // from the appropriate storage.
-    void load(RepositoryType type, List<StorageRequestKey> keys)
-                    throws StorageException, IndexException;
 
     // This allows a upload to reserve a path before uploading to it.
     ReservedArtifact addReservationKey(IndexKey key) throws IndexException;

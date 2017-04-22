@@ -51,7 +51,6 @@ public class TestJavaSnapshotRepository {
 		sc.setRootPath("test-path");
 		
 		storage = new TestStorage();
-		jsr.setStorageConfiguration(sc);
 		index = new InMemoryIndex();
 		
 		HangarConfiguration hc = new HangarConfiguration();

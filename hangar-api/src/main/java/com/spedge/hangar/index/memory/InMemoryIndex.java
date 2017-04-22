@@ -1,7 +1,6 @@
 package com.spedge.hangar.index.memory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -10,12 +9,8 @@ import org.slf4j.LoggerFactory;
 import com.spedge.hangar.index.IIndex;
 import com.spedge.hangar.index.IndexArtifact;
 import com.spedge.hangar.index.IndexConfictException;
-import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.index.ReservedArtifact;
-import com.spedge.hangar.repo.RepositoryType;
-import com.spedge.hangar.storage.StorageException;
-import com.spedge.hangar.storage.request.StorageRequestKey;
 
 public class InMemoryIndex implements IIndex
 {
@@ -27,15 +22,27 @@ public class InMemoryIndex implements IIndex
         this.index = new HashMap<String, IndexArtifact>();
     }
     
-    
+    /*
+     * No intialisation needing done here, we simply store the
+     * index in memory as this object.
+     * 
+     * (non-Javadoc)
+     * @see com.spedge.hangar.index.IIndex#initaliseIndex()
+     */
     @Override
     public void initaliseIndex(){}
 
+    /*
+     * Does this artifact exist in our map?
+     * 
+     * (non-Javadoc)
+     * @see com.spedge.hangar.index.IIndex#isArtifact(com.spedge.hangar.index.IndexKey)
+     */
     public boolean isArtifact(IndexKey key)
     {
         return index.containsKey(key.toString());
     }
-
+   
     /**
      * Registers an Artifact with the Index.
      */
@@ -84,17 +91,5 @@ public class InMemoryIndex implements IIndex
         {
             throw new IndexConfictException();
         }
-    }
-
-
-    @Override
-    public void load(RepositoryType type, List<StorageRequestKey> keys) throws StorageException, IndexException
-    {
-        for(StorageRequestKey key : keys)
-        {
-            index.put(IndexKey.createIndexString(type, key.getKey("/")), null);
-        }
-        
-        logger.info("Loaded " + keys.size() + " keys.");
     }
 }

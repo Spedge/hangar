@@ -2,6 +2,7 @@ package com.spedge.hangar.storage.request;
 
 import com.google.common.io.ByteStreams;
 import com.spedge.hangar.config.ArtifactLanguage;
+import com.spedge.hangar.storage.request.StorageRequest.StorageRequestBuilder;
 
 import org.apache.commons.io.IOUtils;
 
@@ -81,6 +82,11 @@ public class StorageRequest
         return new ByteArrayInputStream(stream);
     }
     
+    public byte[] getStreamAsByteArray()
+    {
+        return stream;
+    }
+    
     public static class StorageRequestBuilder 
     {
         private int length;
@@ -90,6 +96,25 @@ public class StorageRequest
         private List<String> index;
         private ArtifactLanguage language;
         
+        public StorageRequestBuilder(){}
+        
+        /**
+         * To be used when you've got a half filled StorageRequest and you want
+         * to add more to it - usually when a request is redirected to a proxy
+         * and additional information is added (because the artifact is downloaded).
+         * 
+         * @param sr Existing StorageRequest
+         */
+        public StorageRequestBuilder(StorageRequest sr)
+        {
+            this.length = sr.getLength();
+            this.stream = sr.getStreamAsByteArray();
+            this.filename = sr.getKey().getFilename();
+            this.index = sr.getKey().getKey();
+            this.overwritable = sr.isOverwritable();
+            this.language = sr.getLanguage();
+        }
+
         public StorageRequestBuilder length(int length)
         {
             this.length = length;
@@ -123,6 +148,12 @@ public class StorageRequest
         public StorageRequestBuilder index(String... index)
         {
             this.index = Arrays.asList(index);
+            return this;
+        }
+        
+        public StorageRequestBuilder index(List<String> index)
+        {
+            this.index = index;
             return this;
         }
         
