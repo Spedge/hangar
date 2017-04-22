@@ -8,6 +8,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -88,7 +90,7 @@ public class LocalStorage extends Storage
     public StreamingOutput getArtifactStream(StorageRequest sr) throws StorageRequestException
     {                       
         // Determine the location of this artifact on storage according to the index.
-        Path streamPath = this.convertIndex(sr.getIndex());
+        Path streamPath = this.convertIndex(sr);
         
         // Check if we can read it - if so, return a stream to the source.
         if (Files.isReadable(streamPath))
@@ -109,12 +111,12 @@ public class LocalStorage extends Storage
             throw new StorageRequestException(StorageRequestException.DOES_NOT_EXIST);
         }
     }
-    
+
     @Override
     public void uploadArtifactStream(StorageRequest sr) throws StorageRequestException
     {
         // Determine the location of this artifact on storage according to the index.
-        Path streamPath = this.convertIndex(sr.getIndex());
+        Path streamPath = this.convertIndex(sr);
         
         // If this is considered by the API to be an artifact that can be overwritten, allow it.
         StandardCopyOption[] options = sr.isOverwritable() 
@@ -139,17 +141,16 @@ public class LocalStorage extends Storage
     public List<StorageRequestKey> getArtifactKeys(StorageRequest sr) throws StorageRequestException
     {
         List<StorageRequestKey> keys;
-        ArtifactLanguage type = sr.getIndex().getType();
-        Path sourcePath = convertIndex(sr.getIndex());
+        Path sourcePath = convertIndex(sr);
         
         try
         {
             keys = Files.walk(sourcePath)
                         .filter(Files::isRegularFile) // For each file
                         .map(e -> e.toString().replace(sourcePath.toString(), "")) // Remove the absolute path
-                        //.map(e -> e.subSequence(0, e.lastIndexOf(File.separator)).toString())
                         .distinct() // Get rid of any replicas
-                        .map(e -> new StorageRequestKey(type, "/", e))
+                        .map(e -> fs.getPath(e)) // Rebuild into a path
+                        .map(e -> new StorageRequestKey(new ArrayList<String>(Arrays.asList(e.getParent().toString().split("/"))), e.getFileName().toString()))
                         .collect(Collectors.toList());
             
             return keys;
@@ -166,9 +167,9 @@ public class LocalStorage extends Storage
      * @param index An entry containing data that we can create a path from.
      * @return A full path to the location stated in the StorageRequestIndex.
      */
-    private Path convertIndex(StorageRequestKey index)
-    {
-        return fs.getPath(this.rootPath + index.getConvertedPath("/"));
+    private Path convertIndex(StorageRequest sr)
+    {       
+        return fs.getPath(this.rootPath, sr.getKey().getFullKey());
     }
     
     @Override

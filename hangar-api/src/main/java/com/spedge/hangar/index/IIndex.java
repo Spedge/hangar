@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.spedge.hangar.index.memory.InMemoryIndex;
 import com.spedge.hangar.index.zookeeper.ZooKeeperIndex;
+import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.request.StorageRequestKey;
 
@@ -47,7 +48,8 @@ public interface IIndex
 
     // When the index is empty on startup, we load it
     // from the appropriate storage.
-    void load(List<StorageRequestKey> keys) throws StorageException, IndexException;
+    void load(RepositoryType type, List<StorageRequestKey> keys)
+                    throws StorageException, IndexException;
 
     // This allows a upload to reserve a path before uploading to it.
     ReservedArtifact addReservationKey(IndexKey key) throws IndexException;

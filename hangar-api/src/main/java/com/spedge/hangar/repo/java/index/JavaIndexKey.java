@@ -1,10 +1,10 @@
 package com.spedge.hangar.repo.java.index;
 
+import java.util.Objects;
+
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.repo.java.base.JavaGroup;
-
-import java.util.Objects;
 
 public class JavaIndexKey extends IndexKey
 {

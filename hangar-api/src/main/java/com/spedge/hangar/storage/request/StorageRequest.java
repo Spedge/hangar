@@ -9,6 +9,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
@@ -17,9 +19,9 @@ public class StorageRequest
 {
     private int length;
     private byte[] stream;
-    private String filename;
+    private StorageRequestKey key;
     private boolean isOverwritable = false;
-    private StorageRequestKey index;
+    private ArtifactLanguage language;
     
     /**
      * Creates a StorageRequest to be used to both store and retrieve data from 
@@ -30,9 +32,9 @@ public class StorageRequest
     {
         this.length = srb.length;
         this.stream = srb.stream;
-        this.filename = srb.filename;
+        this.key = new StorageRequestKey(srb.index, srb.filename);
         this.isOverwritable = srb.overwritable;
-        this.index = srb.index;
+        this.language = srb.language;
     }
 
     public int getLength()
@@ -40,9 +42,9 @@ public class StorageRequest
         return length;
     }
 
-    public String getFilename()
+    public StorageRequestKey getKey()
     {
-        return filename;
+        return key;
     }
     
     public boolean isOverwritable()
@@ -50,9 +52,9 @@ public class StorageRequest
         return this.isOverwritable;
     }
     
-    public StorageRequestKey getIndex()
+    public ArtifactLanguage getLanguage()
     {
-        return index;
+        return this.language;
     }
     
     /**
@@ -85,7 +87,8 @@ public class StorageRequest
         private byte[] stream;
         private String filename;
         private boolean overwritable = false;
-        private StorageRequestKey index;
+        private List<String> index;
+        private ArtifactLanguage language;
         
         public StorageRequestBuilder length(int length)
         {
@@ -117,9 +120,15 @@ public class StorageRequest
             return this;            
         }
         
-        public StorageRequestBuilder index(ArtifactLanguage language, String delimiter, String key)
+        public StorageRequestBuilder index(String... index)
         {
-            this.index = new StorageRequestKey(language, delimiter, key);
+            this.index = Arrays.asList(index);
+            return this;
+        }
+        
+        public StorageRequestBuilder language(ArtifactLanguage lang)
+        {
+            this.language = lang;
             return this;
         }
         

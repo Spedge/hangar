@@ -13,6 +13,7 @@ import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.index.IndexKey;
 import com.spedge.hangar.index.ReservedArtifact;
+import com.spedge.hangar.repo.RepositoryType;
 import com.spedge.hangar.storage.StorageException;
 import com.spedge.hangar.storage.request.StorageRequestKey;
 
@@ -87,12 +88,13 @@ public class InMemoryIndex implements IIndex
 
 
     @Override
-    public void load(List<StorageRequestKey> keys) throws StorageException, IndexException
+    public void load(RepositoryType type, List<StorageRequestKey> keys) throws StorageException, IndexException
     {
         for(StorageRequestKey key : keys)
         {
-            index.put(key.getConvertedPath("/"), null);
+            index.put(IndexKey.createIndexString(type, key.getKey("/")), null);
         }
+        
         logger.info("Loaded " + keys.size() + " keys.");
     }
 }

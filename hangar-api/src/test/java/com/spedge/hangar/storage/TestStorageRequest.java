@@ -23,7 +23,7 @@ public class TestStorageRequest
                             .length(42)
                             .build();
         
-        assertEquals("A Filename", sr.getFilename());
+        assertEquals("A Filename", sr.getKey().getFilename());
         assertEquals(42, sr.getLength());
         assertEquals("Any String you want", IOUtils.toString(sr.getNewStream()));
         

@@ -1,5 +1,8 @@
 package com.spedge.hangar.repo.java.base;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * A base object to allow easy generation of JavaGroup definitions (they come at us in many formats). 
  * @author Spedge
@@ -31,6 +34,15 @@ public class JavaGroup
     public String getGroupAsPath()
     {
         return group.replace(".", "/");
+    }
+    
+    /**
+     * Return the group split by the dot delimiter as a list.
+     * @return A list of the items in a group, split by dot.
+     */
+    public List<String> getGroupAsList()
+    {
+        return Arrays.asList(group.split("\\."));
     }
     
     /**

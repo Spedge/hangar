@@ -1,45 +1,41 @@
 package com.spedge.hangar.storage.request;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.spedge.hangar.config.ArtifactLanguage;
+import com.spedge.hangar.index.IndexKey;
 
 public class StorageRequestKey
 {
-    private ArtifactLanguage type;
-    private String delimiter;
-    private String path;
-    
-    /**
-     * Contains the component parts that the Storage Layer will use
-     * to decide where to store the artifact.
-     *
-     * @param type What kind of artifact is this?
-     * @param delimiter The delimiter that allows the index to break down the path.
-     * @param path The path that's been submitted by the API
-     */
-    public StorageRequestKey(ArtifactLanguage type, String delimiter, String path)
+    private List<String> index;
+    private String filename;
+
+    public StorageRequestKey(List<String> index, String filename)
     {
-        this.type = type;
-        this.delimiter = delimiter;
-        this.path = path;
+        this.index = index;
+        this.filename = filename;
     }
-    
-    public String getDelimiter()
+        
+    public String[] getFullKey()
     {
-        return delimiter;
+        List<String> tempIndex = new ArrayList<String>(index);
+        
+        if (filename != null) 
+        { 
+            tempIndex.add(filename); 
+        }
+        
+        return tempIndex.toArray(new String[0]);
     }
 
-    public String getPath()
+    public String getFilename()
     {
-        return path;
+        return filename;
     }
-    
-    public String getConvertedPath(String newDelimiter)
+
+    public String getKey(String delimiter)
     {
-        return path.replace(delimiter, newDelimiter);
+        return String.join(delimiter, index);
     }
-    
-    public ArtifactLanguage getType()
-    {
-        return type;
-    } 
 }

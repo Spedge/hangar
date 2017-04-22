@@ -258,7 +258,8 @@ public class ZooKeeperIndex implements IIndex
     }
 
     @Override
-    public void load(List<StorageRequestKey> keys) throws StorageException, IndexException
+    public void load(RepositoryType type, List<StorageRequestKey> keys)
+                    throws StorageException, IndexException
     {
         // TODO Auto-generated method stub
         

@@ -48,11 +48,11 @@ public class TestStorage implements IStorage
 	}
 
 	public void uploadReleaseArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException {
-		fakeStorage.put(key.getLocation(), sr.getFilename());
+		fakeStorage.put(key.getLocation(), sr.getKey().getFilename());
 	}
 
 	public void uploadSnapshotArtifactStream(IndexArtifact key, StorageRequest sr) throws StorageException {
-		fakeStorage.put(key.getLocation(), sr.getFilename());
+		fakeStorage.put(key.getLocation(), sr.getKey().getFilename());
 	}
 	
 	public class FakeStreamingOutput implements StreamingOutput

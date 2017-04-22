@@ -25,6 +25,11 @@ public class IndexKey
 
     public String toString()
     {
+        return IndexKey.createIndexString(type, key);
+    }
+    
+    public static String createIndexString(RepositoryType type, String key)
+    {
         return type.getLanguage() + ":" + key;
     }
 

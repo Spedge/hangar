@@ -1,25 +1,17 @@
 package com.spedge.hangar.repo.java;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.health.HealthCheck;
-import com.spedge.hangar.index.IndexArtifact;
-import com.spedge.hangar.index.IndexConfictException;
 import com.spedge.hangar.index.IndexException;
 import com.spedge.hangar.repo.RepositoryBase;
 import com.spedge.hangar.repo.java.healthcheck.JavaRepositoryHealthcheck;
@@ -33,7 +25,6 @@ import com.spedge.hangar.storage.request.StorageRequestException;
 public abstract class JavaRepository extends RepositoryBase
 {
     protected final Logger logger = LoggerFactory.getLogger(JavaRepository.class);
-
     private JavaRepositoryHealthcheck check;
     private MavenStorageRequestFactory factory;
 
@@ -64,7 +55,7 @@ public abstract class JavaRepository extends RepositoryBase
         StorageRequest sr = factory.downloadKeysRequest();
         try
         {
-            super.getIndex().load(super.getStorage().getArtifactKeys(sr));
+            super.getIndex().load(getType(), super.getStorage().getArtifactKeys(sr));
         }
         catch (StorageException | IndexException | StorageRequestException e)
         {
@@ -88,7 +79,7 @@ public abstract class JavaRepository extends RepositoryBase
                 // If it doesn't, we tell the requester that it's not found.
                 if (true || getIndex().isArtifact(key))
                 {
-                    StorageRequest sr = factory.downloadArtifactRequest(key);
+                    StorageRequest sr = factory.downloadArtifactRequest(key, filename);
 
                     try
                     {
@@ -198,44 +189,45 @@ public abstract class JavaRepository extends RepositoryBase
 //        }
 //    }
 //    
-//    /**
-//     * Retrieve an artifact, starting with our local artifact store.
-//     * If it doesn't exist, prepare a request and retrieve the artifact from storage.
-//     * 
-//     * @param proxies Array of potential proxy sources
-//     * @param key IndexKey for the requested artifact
-//     * @param filename The filename of the file requested
-//     * @return StreamingOutput of the file
-//     */
-//    public StreamingOutput getProxiedArtifact(String[] proxies, JavaIndexKey key, String filename)
-//    {
-//        try
-//        {
-//            return getArtifact(key, filename);
-//        }
-//        catch (NotFoundException nfe)
-//        {
-//            String path = key.getGroup().getGroupAsPath() + "/" 
-//                            + key.getArtifact() + "/" 
-//                            + key.getVersion() + "/" 
-//                            + filename;
-//            
-//            try
-//            {
-//	            StorageRequest sr = requestProxiedArtifact(proxies, path, filename);
-//	            
+    /**
+     * Retrieve an artifact, starting with our local artifact store.
+     * If it doesn't exist, prepare a request and retrieve the artifact from storage.
+     * 
+     * @param proxies Array of potential proxy sources
+     * @param key IndexKey for the requested artifact
+     * @param filename The filename of the file requested
+     * @return StreamingOutput of the file
+     */
+    public StreamingOutput getProxiedArtifact(String[] proxies, JavaIndexKey key, String filename)
+    {
+        try
+        {
+            return getArtifact(key, filename);
+        }
+        catch (NotFoundException nfe)
+        {
+            String path = key.getGroup().getGroupAsPath() + "/" 
+                            + key.getArtifact() + "/" 
+                            + key.getVersion() + "/" 
+                            + filename;
+            
+            try
+            {
+	            StorageRequest sr = requestProxiedArtifact(proxies, path, filename);
+	            
 //	            // Because this is an artifact that's new to us in the proxy, 
 //	            // we want to add it to the index.
 //	            addMetadata(key, sr);
 //	            
-//	            return sr.getStreamingOutput();
-//            }
-//            catch (NotFoundException nfee)
-//            {
+	            return sr.getStreamingOutput();
+            }
+            catch (NotFoundException nfee)
+            {
+                return null;
 //           		return createChecksum(key, filename);
-//            }
-//        }
-//    }
+            }
+        }
+    }
 //    
 //    /**
 //     * If there is not a checksum file uploaded as part of the artefact (which, really, you should do)
